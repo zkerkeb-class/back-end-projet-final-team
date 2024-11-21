@@ -2,9 +2,9 @@
 
 ### Framework
 
-- [ ] Create basic server configuration
+- [x] Create basic server configuration
 - [ ] Set up middleware
-  - [ ] CORS
+  - [x] CORS
   - [ ] Helmet for security
   - [ ] Rate limiting
   - [ ] JSON parsing
