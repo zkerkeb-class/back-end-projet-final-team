@@ -1,11 +1,13 @@
 {
+  "editor.renderWhitespace": "boundary",
+  "editor.rulers": [80],
   "editor.formatOnSave": true,
+  "editor.tabSize": 2,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
+    "source.fixAll.eslint": "explicit",
+    "source.fixAll": "explicit"
   },
   "eslint.validate": ["javascript", "javascriptreact"],
-  "[javascript]": {
-    "editor.formatOnSave": true
-  }
+  "editor.codeActionsOnSaveTimeout": 5000
 }
