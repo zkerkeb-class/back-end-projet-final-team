@@ -11,6 +11,7 @@
     "prepare": "husky install",
     "start": "NODE_ENV=production node src/server.js",
     "dev": "NODE_ENV=development nodemon src/server.js",
+    "dev:db": "docker-compose -f ./db-compose/compose.yml up -d",
     "test": "NODE_ENV=test jest"
   },
   "husky": {
