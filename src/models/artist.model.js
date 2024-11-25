@@ -1,5 +1,4 @@
 const { sequelize, DataTypes, Model } = require('../services/db.service');
-const musicGenres = require('../constants/musicGenres');
 
 class Artist extends Model {}
 
@@ -24,10 +23,6 @@ Artist.init(
     },
     images: {
       type: DataTypes.JSONB,
-      allowNull: true,
-    },
-    genre: {
-      type: DataTypes.ENUM(musicGenres),
       allowNull: true,
     },
     createdAt: {

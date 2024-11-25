@@ -4,6 +4,10 @@ const PlaylistTrack = require('./playlistTrack.model');
 const Track = require('./track.model');
 const Artist = require('./artist.model');
 const Album = require('./album.model');
+const Genre = require('./genre.model');
+const ArtistGenre = require('./artistGenre.model');
+const TrackGenre = require('./trackGenre.model');
+const AlbumGenre = require('./albumGenre.model');
 
 // Define associations
 User.hasMany(Playlist, {
@@ -40,6 +44,13 @@ Track.belongsTo(Album, {
   as: 'album',
 });
 
+Track.belongsToMany(Genre, {
+  through: TrackGenre,
+  foreignKey: 'track_id',
+  otherKey: 'genre_id',
+  as: 'genres',
+});
+
 Artist.hasMany(Track, {
   foreignKey: 'artist_id',
   as: 'tracks',
@@ -48,6 +59,13 @@ Artist.hasMany(Track, {
 Artist.hasMany(Album, {
   foreignKey: 'artist_id',
   as: 'albums',
+});
+
+Artist.belongsToMany(Genre, {
+  through: ArtistGenre,
+  foreignKey: 'artist_id',
+  otherKey: 'genre_id',
+  as: 'genres',
 });
 
 Album.belongsTo(Artist, {
@@ -60,6 +78,34 @@ Album.hasMany(Track, {
   as: 'tracks',
 });
 
+Album.belongsToMany(Genre, {
+  through: AlbumGenre,
+  foreignKey: 'album_id',
+  otherKey: 'genre_id',
+  as: 'genres',
+});
+
+Genre.belongsToMany(Artist, {
+  through: ArtistGenre,
+  foreignKey: 'genre_id',
+  otherKey: 'artist_id',
+  as: 'artists',
+});
+
+Genre.belongsToMany(Track, {
+  through: TrackGenre,
+  foreignKey: 'genre_id',
+  otherKey: 'track_id',
+  as: 'tracks',
+});
+
+Genre.belongsToMany(Album, {
+  through: AlbumGenre,
+  foreignKey: 'genre_id',
+  otherKey: 'album_id',
+  as: 'albums',
+});
+
 module.exports = {
   User,
   Playlist,
@@ -67,4 +113,6 @@ module.exports = {
   Track,
   Artist,
   Album,
+  Genre,
+  ArtistGenre,
 };

@@ -1,5 +1,4 @@
 const { sequelize, DataTypes, Model } = require('../services/db.service');
-const musicGenres = require('../constants/musicGenres');
 
 class Track extends Model {}
 
@@ -44,10 +43,6 @@ Track.init(
     },
     waveFormData: {
       type: DataTypes.TEXT,
-      allowNull: true,
-    },
-    genre: {
-      type: DataTypes.ENUM(musicGenres),
       allowNull: true,
     },
     lyrics: {
