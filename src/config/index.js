@@ -28,6 +28,7 @@ const {
   DB_USER,
   DB_PASSWORD,
   ALLOWED_ORIGINS,
+  JWT_SECRET,
 } = process.env;
 
 if (
@@ -37,7 +38,8 @@ if (
   !DB_NAME,
   !DB_USER,
   !DB_PASSWORD,
-  !ALLOWED_ORIGINS)
+  !ALLOWED_ORIGINS,
+  !JWT_SECRET)
 ) {
   throw new Error('Some environment variables are missing');
 }
@@ -53,6 +55,7 @@ const config = {
     password: DB_PASSWORD,
   },
   allowedOrigins: ALLOWED_ORIGINS.split(','),
+  jwtSecret: JWT_SECRET,
 };
 
 module.exports = config;
