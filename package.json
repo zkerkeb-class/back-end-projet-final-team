@@ -9,10 +9,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky install",
-    "start": "NODE_ENV=production node src/server.js",
-    "dev": "NODE_ENV=development nodemon src/server.js",
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
     "dev:db": "docker-compose -f ./db-compose/compose.yml up -d",
-    "test": "NODE_ENV=test jest"
+    "test": "jest"
   },
   "husky": {
     "hooks": {
