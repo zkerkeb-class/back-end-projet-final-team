@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const config = require('../config');
+const apiRouter = require('../routes');
 const {
   logger,
   configureLogger,
@@ -34,6 +35,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(createMorganMiddleware(env));
 app.use(limiter);
+app.use('/api/v1', apiRouter);
 
 app.use((req, _res, next) => {
   configuredLogger.info(`Request received: ${req.method} ${req.url}`);
@@ -53,7 +55,7 @@ app.use((err, req, res, _next) => {
   });
 });
 
-app.get('/health', (_req, res) => {
+app.get('/api/health', (_req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
