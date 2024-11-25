@@ -1,9 +1,9 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../services/db.service');
+const { sequelize, DataTypes, Model } = require('../services/db.service');
 const musicGenres = require('../constants/musicGenres');
 
-const Track = sequelize.define(
-  'Track',
+class Track extends Model {}
+
+Track.init(
   {
     id: {
       type: DataTypes.UUID,
@@ -47,7 +47,7 @@ const Track = sequelize.define(
       allowNull: true,
     },
     genre: {
-      type: DataTypes.ENUM(DataTypes.ENUM(musicGenres)),
+      type: DataTypes.ENUM(musicGenres),
       allowNull: true,
     },
     lyrics: {
@@ -72,9 +72,11 @@ const Track = sequelize.define(
     },
   },
   {
+    sequelize,
+    modelName: 'Track',
     tableName: 'tracks',
     timestamps: true,
-    underscores: true,
+    underscored: true,
     indexes: [
       {
         unique: true,

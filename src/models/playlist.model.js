@@ -1,8 +1,8 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../services/db.service');
+const { sequelize, DataTypes, Model } = require('../services/db.service');
 
-const Playlist = sequelize.define(
-  'Playlist',
+class Playlist extends Model {}
+
+Playlist.init(
   {
     id: {
       type: DataTypes.UUID,
@@ -41,22 +41,12 @@ const Playlist = sequelize.define(
     },
   },
   {
+    sequelize,
+    modelName: 'Playlist',
     tableName: 'playlists',
     timestamps: true,
     underscored: true,
   },
 );
-
-Playlist.associate = (models) => {
-  Playlist.belongsTo(models.User, {
-    foreignKey: 'user_id',
-    as: 'user',
-  });
-  Playlist.belongsToMany(models.Track, {
-    through: 'PlaylistTrack',
-    foreignKey: 'playlist_id',
-    as: 'tracks',
-  });
-};
 
 module.exports = Playlist;

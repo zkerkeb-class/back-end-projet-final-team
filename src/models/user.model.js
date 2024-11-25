@@ -1,8 +1,8 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../services/db.service');
+const { sequelize, DataTypes, Model } = require('../services/db.service');
 
-const User = sequelize.define(
-  'User',
+class User extends Model {}
+
+User.init(
   {
     id: {
       type: DataTypes.UUID,
@@ -43,6 +43,8 @@ const User = sequelize.define(
     },
   },
   {
+    sequelize,
+    modelName: 'User',
     tableName: 'users',
     timestamps: true,
     underscored: true,

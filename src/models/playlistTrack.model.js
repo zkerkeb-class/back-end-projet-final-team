@@ -1,8 +1,8 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../services/db.service');
+const { sequelize, DataTypes, Model } = require('../services/db.service');
 
-const PlaylistTrack = sequelize.define(
-  'PlaylistTrack',
+class PlaylistTrack extends Model {}
+
+PlaylistTrack.init(
   {
     playlist_id: {
       type: DataTypes.UUID,
@@ -31,6 +31,8 @@ const PlaylistTrack = sequelize.define(
     },
   },
   {
+    sequelize,
+    modelName: 'PlaylistTrack',
     tableName: 'playlist_tracks',
     timestamps: false,
     underscored: true,

@@ -1,9 +1,9 @@
-const { DataTypes } = require('sequelize');
-const { sequelize } = require('../services/db.service');
+const { sequelize, DataTypes, Model } = require('../services/db.service');
 const musicGenres = require('../constants/musicGenres');
 
-const Artist = sequelize.define(
-  'Artist',
+class Artist extends Model {}
+
+Artist.init(
   {
     id: {
       type: DataTypes.UUID,
@@ -40,6 +40,8 @@ const Artist = sequelize.define(
     },
   },
   {
+    sequelize,
+    modelName: 'Artist',
     tableName: 'artists',
     timestamps: true,
     underscored: true,
