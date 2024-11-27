@@ -1,4 +1,5 @@
 const { sequelize, DataTypes, Model } = require('../services/db.service');
+const bcrypt = require('bcryptjs');
 
 class User extends Model {}
 
@@ -33,6 +34,18 @@ User.init(
         notEmpty: true,
       },
     },
+    role: {
+      type: DataTypes.STRING,
+      defaultValue: 'user',
+      allowNull: false,
+      validate: {
+        isIn: [['user', 'artist', 'admin']],
+      },
+    },
+    images: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+    },
     createdAt: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
@@ -48,6 +61,16 @@ User.init(
     tableName: 'users',
     timestamps: true,
     underscored: true,
+    hooks: {
+      beforeCreate: async (user, _options) => {
+        user.password = await bcrypt.hash(user.password, 10);
+      },
+      beforeUpdate: async (user, _options) => {
+        if (user.changed('password')) {
+          user.password = await bcrypt.hash(user.password, 10);
+        }
+      },
+    },
   },
 );
 
