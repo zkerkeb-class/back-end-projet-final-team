@@ -2,7 +2,8 @@ const { Artist } = require('../models');
 
 const createArtist = async (req, res, _next) => {
   try {
-    const artist = await Artist.create(req.body);
+    const { artist: artistData } = req.body;
+    const artist = await Artist.create(artistData);
     return res.status(201).send({
       message: 'Artist created successfully',
       artist,
@@ -40,17 +41,21 @@ const getArtistById = async (req, res, _next) => {
 const updateArtist = async (req, res, _next) => {
   try {
     const { id } = req.params;
-    const [updated] = await Artist.update(req.body, {
+    const [updatedRowsCount] = await Artist.update(req.body, {
       where: { id: id },
     });
-    if (updated) {
-      const updatedArtist = await Artist.findByPk(id);
-      return res.status(200).send({
-        message: 'Artist updated successfully',
-        artist: updatedArtist,
-      });
+    if (updatedRowsCount === 0) {
+      return res.status(404).send({ message: 'Artist not found' });
     }
-    throw new Error('Artist not found');
+
+    const updatedArtist = await Artist.findByPk(id, {
+      attributes: { exclude: ['deletedAt', 'updatedAt'] },
+    });
+
+    return res.status(200).send({
+      message: 'Artist updated successfully',
+      artist: updatedArtist,
+    });
   } catch (error) {
     return res.status(500).send({ error: error.message });
   }
