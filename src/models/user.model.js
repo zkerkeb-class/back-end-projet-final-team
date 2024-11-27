@@ -34,12 +34,12 @@ User.init(
         notEmpty: true,
       },
     },
-    role: {
-      type: DataTypes.STRING,
-      defaultValue: 'user',
+    roleId: {
+      type: DataTypes.UUID,
       allowNull: false,
-      validate: {
-        isIn: [['user', 'artist', 'admin']],
+      references: {
+        model: 'roles',
+        key: 'id',
       },
     },
     images: {
