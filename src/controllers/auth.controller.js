@@ -1,10 +1,22 @@
-const { User } = require('../models');
+const { User, Role, Artist } = require('../models');
 const { generateToken } = require('../services/jwt.service');
 const bcrypt = require('bcryptjs');
 
 const registerUser = async (req, res) => {
   try {
-    const user = await User.create(req.body);
+    const { role } = req.body;
+    const userRole = await Role.findOne({ where: { name: role } });
+    const user = await User.create({
+      ...req.body,
+      roleId: userRole.id,
+    });
+
+    if (role === 'artist') {
+      await Artist.create({
+        user_id: user.id,
+        name: user.username,
+      });
+    }
 
     const token = generateToken({
       id: user.id,
@@ -14,7 +26,7 @@ const registerUser = async (req, res) => {
       user: {
         username: user.username,
         email: user.email,
-        role: user.role,
+        role: userRole.name,
         images: user.images,
       },
       token,
@@ -27,7 +39,10 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({
+      where: { email },
+      include: { model: Role, as: 'role' },
+    });
 
     if (!user) {
       throw new Error('User not found');
@@ -41,14 +56,14 @@ const loginUser = async (req, res) => {
 
     const token = generateToken({
       id: user.id,
-      role: user.role,
+      role: user.role.id,
     });
 
     res.status(200).send({
       user: {
         username: user.username,
         email: user.email,
-        role: user.role,
+        role: user.role.name,
         images: user.images,
       },
       token,
