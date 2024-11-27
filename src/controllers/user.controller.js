@@ -32,15 +32,18 @@ const updateUser = async (req, res, _next) => {
   try {
     const { id } = req.params;
     const { user: userData } = req.body;
-    const user = await User.findByPk(id, { exclude: ['password'] });
 
-    if (!user) {
+    const [updatedRowsCount] = await User.update(userData, { where: { id } });
+
+    if (updatedRowsCount === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    await user.update(userData);
+    const updatedUser = await User.findByPk(id, {
+      attributes: { exclude: ['password'] },
+    });
 
-    res.status(200).json({ user });
+    res.status(200).json({ user: updatedUser });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
