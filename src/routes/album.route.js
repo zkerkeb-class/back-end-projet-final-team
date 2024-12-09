@@ -3,10 +3,10 @@ const albumController = require('../controllers/album.controller');
 const isAuth = require('../middlewares/isAuth');
 const {
   canRead,
-  canCreate,
   canEdit,
   canDelete,
-} = require('../middlewares/permissions');
+  canUpload,
+} = require('../middlewares/checkPermission');
 const {
   checkResourceOwnership,
   canModifyAlbum,
@@ -16,7 +16,7 @@ const router = express.Router();
 
 router.get('/', isAuth, canRead, albumController.getAlbums);
 router.get('/:id', isAuth, canRead, albumController.getAlbumById);
-router.post('/', isAuth, canCreate, albumController.createAlbum);
+router.post('/', isAuth, canUpload, albumController.createAlbum);
 router.put(
   '/:id',
   isAuth,

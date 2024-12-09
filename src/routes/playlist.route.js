@@ -3,26 +3,22 @@ const playlistController = require('../controllers/playlist.controller');
 const isAuth = require('../middlewares/isAuth');
 const {
   canRead,
-  canCreate,
+  canUpload,
   canEdit,
   canDelete,
-} = require('../middlewares/permissions');
-const {
-  checkResourceOwnership,
-  canModifyPlaylist,
-} = require('../middlewares/ownership');
+} = require('../middlewares/checkPermission');
+const { checkResourceOwnership } = require('../middlewares/ownership');
 
 const router = express.Router();
 
 router.get('/', isAuth, canRead, playlistController.getPlaylists);
 router.get('/:id', isAuth, canRead, playlistController.getPlaylistById);
-router.post('/playlists', isAuth, canCreate, playlistController.createPlaylist);
+router.post('/playlists', isAuth, canUpload, playlistController.createPlaylist);
 router.put(
   '/:id',
   isAuth,
   canEdit,
   checkResourceOwnership,
-  canModifyPlaylist,
   playlistController.updatePlaylist,
 );
 router.delete(

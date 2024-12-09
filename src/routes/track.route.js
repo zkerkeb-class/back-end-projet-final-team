@@ -7,16 +7,16 @@ const isAuth = require('../middlewares/isAuth');
 const {
   canEdit,
   canDelete,
-  canCreate,
+  canUpload,
   canRead,
-} = require('../middlewares/permissions');
+} = require('../middlewares/checkPermission');
 const express = require('express');
 
 const router = express.Router();
 
 router.get('/', isAuth, canRead, trackController.getTracks);
 router.get('/:id', isAuth, canRead, trackController.getTrackById);
-router.post('/', isAuth, canCreate, trackController.createTrack);
+router.post('/', isAuth, canUpload, trackController.createTrack);
 router.put(
   '/:id',
   isAuth,
