@@ -14,11 +14,11 @@ const express = require('express');
 
 const router = express.Router();
 
-router.get('/tracks', isAuth, canRead, trackController.getTracks);
-router.get('/tracks/:id', isAuth, canRead, trackController.getTrackById);
-router.post('/tracks', isAuth, canCreate, trackController.createTrack);
+router.get('/', isAuth, canRead, trackController.getTracks);
+router.get('/:id', isAuth, canRead, trackController.getTrackById);
+router.post('/', isAuth, canCreate, trackController.createTrack);
 router.put(
-  '/tracks/:id',
+  '/:id',
   isAuth,
   canEdit,
   checkResourceOwnership,
@@ -26,7 +26,7 @@ router.put(
   trackController.updateTrack,
 );
 router.delete(
-  '/tracks/:id',
+  '/:id',
   isAuth,
   canDelete,
   checkResourceOwnership,
