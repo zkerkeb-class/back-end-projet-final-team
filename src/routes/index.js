@@ -4,9 +4,11 @@ const swaggerUIPath = require('swagger-ui-express');
 const ArtistRouter = require('./artist.route');
 const UserRouter = require('./user.route');
 const AuthRouter = require('./auth.route');
+const TrackRouter = require('./track.route');
 
 const router = Express.Router();
 router.use('/artist', ArtistRouter);
+router.use('/track', TrackRouter);
 router.use('/user', UserRouter);
 router.use('/auth', AuthRouter);
 router.use(

@@ -29,8 +29,8 @@ const checkPermission = (requiredPermission) => {
 };
 
 module.exports = {
-  canReadMusic: checkPermission(ROLES.USER.permissions.READ),
-  canUploadMusic: checkPermission(ROLES.ARTIST.permissions.UPLOAD),
-  canDeleteMusic: checkPermission(ROLES.ARTIST.permissions.DELETE),
-  canEditMusic: checkPermission(ROLES.ARTIST.permissions.EDIT),
+  canRead: checkPermission(ROLES.USER.permissions.READ),
+  canUpload: checkPermission(ROLES.ARTIST.permissions.UPLOAD),
+  canDelete: checkPermission(ROLES.ARTIST.permissions.DELETE),
+  canEdit: checkPermission(ROLES.ARTIST.permissions.EDIT),
 };
