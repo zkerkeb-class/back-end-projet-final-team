@@ -12,7 +12,8 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "dev:db": "docker-compose -f ./db-compose/compose.yml up -d",
-    "test": "jest"
+    "test": "jest",
+    "swagger-autogen": "node src/docs/swagger.js"
   },
   "husky": {
     "hooks": {
@@ -58,6 +59,7 @@
     "pg": "^8.13.1",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.5",
+    "swagger-autogen": "^2.23.7",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "winston": "^3.17.0"
