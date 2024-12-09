@@ -8,11 +8,22 @@ const Genre = require('./genre.model');
 const ArtistGenre = require('./artistGenre.model');
 const TrackGenre = require('./trackGenre.model');
 const AlbumGenre = require('./albumGenre.model');
+const Role = require('./role.model');
 
 // Define associations
 User.hasMany(Playlist, {
   foreignKey: 'user_id',
   as: 'playlists',
+});
+
+User.belongsTo(Artist, {
+  foreignKey: 'user_id',
+  as: 'artist',
+});
+
+User.belongsTo(Role, {
+  foreignKey: 'role_id',
+  as: 'role',
 });
 
 Playlist.belongsTo(User, {
@@ -61,6 +72,12 @@ Artist.hasMany(Album, {
   as: 'albums',
 });
 
+Artist.belongsTo(User, {
+  foreignKey: 'user_id',
+  as: 'user',
+  onDelete: 'SET NULL',
+});
+
 Artist.belongsToMany(Genre, {
   through: ArtistGenre,
   foreignKey: 'artist_id',
@@ -106,6 +123,11 @@ Genre.belongsToMany(Album, {
   as: 'albums',
 });
 
+Role.hasMany(User, {
+  foreignKey: 'role_id',
+  as: 'users',
+});
+
 module.exports = {
   User,
   Playlist,
@@ -115,4 +137,5 @@ module.exports = {
   Album,
   Genre,
   ArtistGenre,
+  Role,
 };

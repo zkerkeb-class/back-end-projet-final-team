@@ -1,5 +1,5 @@
 const { Sequelize, DataTypes, Model } = require('sequelize');
-const LoggerUtil = require('../utils/loggerUtil');
+const logger = require('../utils/loggerUtil');
 const config = require('../config');
 
 const sequelize = new Sequelize(
@@ -8,9 +8,9 @@ const sequelize = new Sequelize(
     dialect: 'postgres',
     logging: (msg) => {
       if (msg.includes('SELECT')) {
-        LoggerUtil.debug(msg);
+        logger.debug(msg);
       } else {
-        LoggerUtil.info(msg);
+        logger.info(msg);
       }
     },
     define: {
@@ -24,18 +24,18 @@ const sequelize = new Sequelize(
 const connect = async () => {
   try {
     await sequelize.authenticate();
-    LoggerUtil.info('Connection has been established successfully.');
+    logger.info('Connection has been established successfully.');
   } catch (error) {
-    LoggerUtil.error('Unable to connect to the database:', error);
+    logger.error('Unable to connect to the database:', error);
   }
 };
 
 const disconnect = async () => {
   try {
     await sequelize.close();
-    LoggerUtil.info('Connection has been closed successfully.');
+    logger.info('Connection has been closed successfully.');
   } catch (error) {
-    LoggerUtil.error('Unable to close the database connection:', error);
+    logger.error('Unable to close the database connection:', error);
   }
 };
 

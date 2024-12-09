@@ -9,6 +9,14 @@ Artist.init(
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4,
     },
+    user_id: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: 'users',
+        key: 'id',
+      },
+    },
     name: {
       type: DataTypes.STRING(255),
       allowNull: false,

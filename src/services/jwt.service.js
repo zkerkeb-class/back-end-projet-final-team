@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config');
-const loggerUtil = require('../utils/logger.util');
+const logger = require('../utils/loggerUtil');
 
 const generateToken = (payload, options = {}) => {
   const defaultOptions = {
@@ -23,7 +23,7 @@ const verifyToken = (token, options = {}) => {
 
     return jwt.verify(token, config.jwtSecret, defaultOptions);
   } catch (err) {
-    loggerUtil.error(err.message);
+    logger.error(err.message);
     return null;
   }
 };
