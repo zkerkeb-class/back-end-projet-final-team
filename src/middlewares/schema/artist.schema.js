@@ -1,4 +1,5 @@
 const joi = require('joi');
+const validate = require('./validate');
 
 const commonString = joi.string().max(255).optional();
 
@@ -15,14 +16,6 @@ const artistUpdateSchema = joi.object({
   country: commonString,
   images: joi.object().optional(),
 });
-
-const validate = (schema) => (req, res, next) => {
-  const { error } = schema.validate(req.body);
-  if (error) {
-    return res.status(400).json({ error: error.details[0].message });
-  }
-  next();
-};
 
 const validateArtist = validate(artistSchema);
 const validateUpdateArtist = validate(artistUpdateSchema);

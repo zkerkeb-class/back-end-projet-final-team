@@ -1,4 +1,5 @@
 const joi = require('joi');
+const validate = require('./validate');
 
 const currentYear = new Date().getFullYear();
 
@@ -19,14 +20,6 @@ const trackUpdateSchema = joi.object({
   genres: joi.array().items(joi.string().min(3).max(255)).optional(),
   coverImages: joi.object().optional(),
 });
-
-const validate = (schema) => (req, res, next) => {
-  const { error } = schema.validate(req.body);
-  if (error) {
-    return res.status(400).json({ error: error.details[0].message });
-  }
-  next();
-};
 
 const validateTrack = validate(trackSchema);
 const validateUpdateTrack = validate(trackUpdateSchema);
