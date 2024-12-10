@@ -45,6 +45,16 @@ class RoleService {
 
     return user.role.permissions;
   }
+
+  async getRoleIdByName(roleName) {
+    const role = await Role.findOne({
+      where: {
+        name: roleName,
+      },
+    });
+
+    return role.id;
+  }
 }
 
 module.exports = new RoleService();

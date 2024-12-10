@@ -14,14 +14,15 @@ const registerUser = async (req, res) => {
     if (role === 'artist') {
       await Artist.create({
         user_id: user.id,
-        name: user.username,
+        name: user.roleId,
       });
     }
 
     const token = generateToken({
       id: user.id,
-      role: user.role,
+      role: user.roleId,
     });
+
     res.status(201).send({
       user: {
         username: user.username,

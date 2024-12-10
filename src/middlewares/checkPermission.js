@@ -1,5 +1,6 @@
 const { ROLES } = require('../config/roles');
 const logger = require('../utils/loggerUtil');
+const { Role } = require('../models');
 
 const checkPermission = (requiredPermission) => {
   return async (req, res, next) => {
@@ -8,13 +9,16 @@ const checkPermission = (requiredPermission) => {
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      const userRole = req.user.role_id;
+      const userRoleId = req.user.role;
 
-      if (!userRole) {
+      if (!userRoleId) {
         return res.status(403).json({ message: 'Role not found' });
       }
 
-      if (!userRole.permissions.includes(requiredPermission)) {
+      const myRole = await Role.findByPk(userRoleId);
+      const rolePermissions = myRole.permissions;
+
+      if (!rolePermissions.includes(requiredPermission)) {
         return res.status(403).json({
           message: 'Insufficient permissions',
           requiredPermission,
@@ -29,8 +33,8 @@ const checkPermission = (requiredPermission) => {
 };
 
 module.exports = {
-  canRead: checkPermission(ROLES.USER.permissions.READ),
-  canUpload: checkPermission(ROLES.ARTIST.permissions.UPLOAD),
-  canDelete: checkPermission(ROLES.ARTIST.permissions.DELETE),
-  canEdit: checkPermission(ROLES.ARTIST.permissions.EDIT),
+  canRead: checkPermission(ROLES.USER.permissions[0]),
+  canUpload: checkPermission(ROLES.ARTIST.permissions[3]),
+  canDelete: checkPermission(ROLES.ARTIST.permissions[5]),
+  canEdit: checkPermission(ROLES.ARTIST.permissions[4]),
 };
