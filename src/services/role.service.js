@@ -1,6 +1,6 @@
 const { Role, User } = require('../models');
 const { ROLES } = require('../config/roles');
-const { logger } = require('../services/app.service');
+const logger = require('../utils/loggerUtil');
 
 class RoleService {
   async createDefaultRoles() {

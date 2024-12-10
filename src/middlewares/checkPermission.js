@@ -1,5 +1,5 @@
 const { ROLES } = require('../config/roles');
-const { logger } = require('../services/app.service');
+const logger = require('../utils/loggerUtil');
 
 const checkPermission = (requiredPermission) => {
   return async (req, res, next) => {

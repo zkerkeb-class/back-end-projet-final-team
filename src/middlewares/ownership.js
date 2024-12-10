@@ -1,5 +1,5 @@
 const { Album, Track, Artist } = require('../models');
-const { logger } = require('../services/app.service');
+const logger = require('../utils/loggerUtil');
 
 const checkResourceOwnership = (Model) => {
   return async (req, res, next) => {
