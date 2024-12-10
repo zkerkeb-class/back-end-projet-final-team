@@ -4,7 +4,7 @@ const {
   validateUser,
   validateLogin,
   userAlreadyExists,
-} = require('../middlewares/user.schema');
+} = require('../middlewares/schema/user.schema');
 
 const router = Express.Router();
 

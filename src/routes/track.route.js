@@ -10,7 +10,7 @@ const {
 const {
   validateTrack,
   validateUpdateTrack,
-} = require('../middlewares/track.schema');
+} = require('../middlewares/schema/track.schema');
 const express = require('express');
 
 const router = express.Router();

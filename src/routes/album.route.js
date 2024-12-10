@@ -7,10 +7,7 @@ const {
   canDelete,
   canUpload,
 } = require('../middlewares/checkPermission');
-const {
-  checkResourceOwnership,
-  canModifyAlbum,
-} = require('../middlewares/ownership');
+const { canModifyAlbum } = require('../middlewares/ownership');
 
 const router = express.Router();
 
@@ -21,16 +18,9 @@ router.put(
   '/:id',
   isAuth,
   canEdit,
-  checkResourceOwnership,
   canModifyAlbum,
   albumController.updateAlbum,
 );
-router.delete(
-  '/:id',
-  isAuth,
-  canDelete,
-  checkResourceOwnership,
-  albumController.deleteAlbum,
-);
+router.delete('/:id', isAuth, canDelete, albumController.deleteAlbum);
 
 module.exports = router;

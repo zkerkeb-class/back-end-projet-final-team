@@ -3,7 +3,7 @@ const ArtistController = require('../controllers/artist.controller');
 const {
   validateArtist,
   validateUpdateArtist,
-} = require('../middlewares/artist.schema');
+} = require('../middlewares/schema/artist.schema');
 const validateIdParam = require('../middlewares/validateIdParam');
 const isAuth = require('../middlewares/isAuth');
 

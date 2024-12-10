@@ -1,6 +1,6 @@
 const joi = require('joi');
 const { Op } = require('sequelize');
-const { User } = require('../models');
+const { User } = require('../../models');
 
 const imagesSchema = joi.object().optional();
 
