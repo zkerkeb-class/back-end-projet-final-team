@@ -1,33 +1,116 @@
-const { User } = require('../models');
-const logger = require('../utils/loggerUtil');
-const RoleService = require('./role.service');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const config = require('../config');
+const BaseService = require('./base.service');
+const { User, Role } = require('../models');
+const { Op } = require('sequelize');
 
-class UserService {
-  async initAdmin() {
+class UserService extends BaseService {
+  constructor() {
+    super(User);
+  }
+
+  async register(userData) {
     try {
-      const roleId = await RoleService.getRoleIdByName('admin');
-      await User.findCreateFind({
-        where: { email: 'admin@localhost.com' },
-        defaults: {
-          email: 'admin@localhost.com',
-          password: 'azerty',
-          username: 'admin',
-          roleId,
-        },
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      const user = await this.create({
+        ...userData,
+        password_hash: hashedPassword,
       });
+      return this.sanitizeUser(user);
     } catch (error) {
-      logger.error('Error initializing admin user: ', error);
+      throw new Error(`Registration failed: ${error.message}`);
     }
   }
 
-  async isAdmin(userId) {
+  async login(email, password) {
     try {
-      const user = await User.findByPk(userId);
-      const role = await RoleService.getRoleById(user.roleId);
-      return role.name === 'admin';
+      const user = await this.findOne({
+        where: { email },
+        include: [{ model: Role }],
+      });
+
+      const isValidPassword = await bcrypt.compare(
+        password,
+        user.password_hash,
+      );
+      if (!isValidPassword) throw new Error('Invalid credentials');
+
+      const accessToken = this.generateAccessToken(user);
+      const refreshToken = this.generateRefreshToken(user);
+
+      await this.update(user.id, {
+        refresh_token: refreshToken,
+        refresh_token_expires_at: new Date(
+          Date.now() + 7 * 24 * 60 * 60 * 1000,
+        ), // 7 days
+        last_login: new Date(),
+      });
+
+      return {
+        user: this.sanitizeUser(user),
+        accessToken,
+        refreshToken,
+      };
     } catch (error) {
-      logger.error('Error checking if user is admin: ', error);
+      throw new Error(`Login failed: ${error.message}`);
     }
+  }
+
+  async refreshToken(refreshToken) {
+    try {
+      const user = await this.findOne({
+        where: {
+          refresh_token: refreshToken,
+          refresh_token_expires_at: {
+            [Op.gt]: new Date(),
+          },
+        },
+      });
+
+      const accessToken = this.generateAccessToken(user);
+      return { accessToken };
+    } catch (error) {
+      throw new Error(`Token refresh failed: ${error.message}`);
+    }
+  }
+
+  async logout(userId) {
+    try {
+      await this.update(userId, {
+        refresh_token: null,
+        refresh_token_expires_at: null,
+      });
+      return { message: 'Logged out successfully' };
+    } catch (error) {
+      throw new Error(`Logout failed: ${error.message}`);
+    }
+  }
+
+  generateAccessToken(user) {
+    return jwt.sign(
+      {
+        id: user.id,
+        email: user.email,
+        user_type: user.user_type,
+        roles: user.Roles?.map((role) => role.name),
+      },
+      config.jwtSecret,
+      { expiresIn: '1h' },
+    );
+  }
+
+  generateRefreshToken(user) {
+    return jwt.sign({ id: user.id }, config.jwtRefreshSecret, {
+      expiresIn: '7d',
+    });
+  }
+
+  sanitizeUser(user) {
+    const sanitized = user.toJSON();
+    delete sanitized.password_hash;
+    delete sanitized.refresh_token;
+    return sanitized;
   }
 }
 
