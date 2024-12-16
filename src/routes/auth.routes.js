@@ -1,7 +1,14 @@
 const router = require('express').Router();
-const { userService } = require('../services');
+const {
+  registerUser,
+  loginUser,
+  refreshToken,
+  logoutUser,
+} = require('../controllers/auth.controller');
 const { authenticate } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
+const upload = require('../config/multer');
+const { validateImageUpload } = require('../middlewares/cdn.middleware');
 const {
   registerSchema,
   loginSchema,
@@ -14,7 +21,17 @@ const {
  *   name: Authentication
  *   description: User authentication and authorization
  */
+const getDataFromRequest = (req, res, next) => {
+  console.log(req.body);
 
+  req.body = {
+    ...req.body,
+    ...req.body.data,
+  };
+  delete req.body.data;
+
+  next();
+};
 /**
  * @swagger
  * /auth/register:
@@ -69,27 +86,14 @@ const {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/register', validate(registerSchema), async (req, res, next) => {
-  try {
-    const user = await userService.register(req.body);
-    res.status(201).json({
-      accessToken: user.accessToken,
-      refreshToken: user.refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        roles: user.roles,
-        user_type: user.user_type,
-        profile_picture_url: user.profile_picture_url,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+router.post(
+  '/register',
+  getDataFromRequest,
+  validate(registerSchema),
+  upload.single('profile_picture'),
+  validateImageUpload,
+  registerUser,
+);
 
 /**
  * @swagger
@@ -134,28 +138,7 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/login', validate(loginSchema), async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
-    const result = await userService.login(email, password);
-    res.json({
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        username: result.user.username,
-        first_name: result.user.first_name,
-        last_name: result.user.last_name,
-        roles: result.user.roles,
-        profile_picture_url: result.user.profile_picture_url,
-        user_type: result.user.user_type,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+router.post('/login', validate(loginSchema), loginUser);
 
 /**
  * @swagger
@@ -191,19 +174,7 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post(
-  '/refresh-token',
-  validate(refreshTokenSchema),
-  async (req, res, next) => {
-    try {
-      const { refreshToken } = req.body;
-      const result = await userService.refreshToken(refreshToken);
-      res.json(result);
-    } catch (error) {
-      next(error);
-    }
-  },
-);
+router.post('/refresh-token', validate(refreshTokenSchema), refreshToken);
 
 /**
  * @swagger
@@ -230,13 +201,6 @@ router.post(
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/logout', authenticate, async (req, res, next) => {
-  try {
-    await userService.logout(req.user.id);
-    res.json({ message: 'Logged out successfully' });
-  } catch (error) {
-    next(error);
-  }
-});
+router.post('/logout', authenticate, logoutUser);
 
 module.exports = router;

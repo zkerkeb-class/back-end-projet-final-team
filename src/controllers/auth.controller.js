@@ -1,80 +1,78 @@
-const { User, Role, Artist } = require('../models');
-const { generateToken } = require('../services/jwt.service');
-const bcrypt = require('bcryptjs');
+const userService = require('../services/user.service');
+const cdnService = require('../services/cdn.service');
 
-const registerUser = async (req, res) => {
+const registerUser = async (req, res, next) => {
   try {
-    const { role } = req.body;
-    const userRole = await Role.findOne({ where: { name: role } });
-    const user = await User.create({
-      ...req.body,
-      roleId: userRole.id,
-    });
-
-    if (role === 'artist') {
-      await Artist.create({
-        user_id: user.id,
-        name: user.roleId,
-      });
+    if (req.file) {
+      req.body.profile_picture = await cdnService.processProfilePicture(
+        req.file.buffer,
+      );
     }
-
-    const token = generateToken({
-      id: user.id,
-      role: user.roleId,
-    });
-
-    res.status(201).send({
+    const user = await userService.register(req.body);
+    res.status(201).json({
+      accessToken: user.accessToken,
+      refreshToken: user.refreshToken,
       user: {
-        username: user.username,
+        id: user.id,
         email: user.email,
-        role: userRole.name,
-        images: user.images,
+        username: user.username,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        roles: user.roles,
+        user_type: user.user_type,
+        profile_picture_url: user.profile_picture_url,
       },
-      token,
     });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-const loginUser = async (req, res) => {
+const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({
-      where: { email },
-      include: { model: Role, as: 'role' },
-    });
-
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      res.status(401).json({ error: 'Invalid password' });
-    }
-
-    const token = generateToken({
-      id: user.id,
-      role: user.role.id,
-    });
-
-    res.status(200).send({
+    const result = await userService.login(email, password);
+    res.json({
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
       user: {
-        username: user.username,
-        email: user.email,
-        role: user.role.name,
-        images: user.images,
+        id: result.user.id,
+        email: result.user.email,
+        username: result.user.username,
+        first_name: result.user.first_name,
+        last_name: result.user.last_name,
+        roles: result.user.roles,
+        profile_picture_url: result.user.profile_picture_url,
+        user_type: result.user.user_type,
       },
-      token,
     });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
+  }
+};
+
+const refreshToken = async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body;
+    const result = await userService.refreshToken(refreshToken);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const logoutUser = async (req, res, next) => {
+  try {
+    await userService.logout(req.user.id);
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    next(error);
   }
 };
 
 module.exports = {
   registerUser,
   loginUser,
+  refreshToken,
+  logoutUser,
 };
