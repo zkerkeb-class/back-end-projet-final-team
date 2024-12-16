@@ -1,58 +1,65 @@
+const { USER_TYPE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
-const bcrypt = require('bcryptjs');
 
 class User extends Model {}
 
 User.init(
   {
     id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
+      autoIncrement: true,
     },
     username: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: DataTypes.STRING(50),
       unique: true,
-      validate: {
-        notEmpty: true,
-        len: [3, 20],
-      },
+      allowNull: false,
     },
     email: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: DataTypes.STRING(255),
       unique: true,
+      allowNull: false,
       validate: {
         isEmail: true,
       },
     },
-    password: {
+    password_hash: {
       type: DataTypes.TEXT,
       allowNull: false,
-      validate: {
-        notEmpty: true,
-      },
     },
-    roleId: {
-      type: DataTypes.UUID,
+    user_type: {
+      type: DataTypes.ENUM(...Object.values(USER_TYPE)),
       allowNull: false,
-      references: {
-        model: 'roles',
-        key: 'id',
-      },
+      defaultValue: USER_TYPE.STANDARD,
     },
-    images: {
-      type: DataTypes.JSONB,
-      allowNull: true,
+    first_name: {
+      type: DataTypes.STRING(100),
     },
-    createdAt: {
+    last_name: {
+      type: DataTypes.STRING(100),
+    },
+    profile_picture_url: {
+      type: DataTypes.TEXT,
+    },
+    artist_id: {
+      type: DataTypes.INTEGER,
+    },
+    is_verified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+    last_login: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
     },
-    updatedAt: {
+    refresh_token: {
+      type: DataTypes.TEXT,
+    },
+    refresh_token_expires_at: {
       type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
     },
   },
   {
@@ -60,17 +67,8 @@ User.init(
     modelName: 'User',
     tableName: 'users',
     timestamps: true,
-    underscored: true,
-    hooks: {
-      beforeCreate: async (user, _options) => {
-        user.password = await bcrypt.hash(user.password, 10);
-      },
-      beforeUpdate: async (user, _options) => {
-        if (user.changed('password')) {
-          user.password = await bcrypt.hash(user.password, 10);
-        }
-      },
-    },
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
   },
 );
 

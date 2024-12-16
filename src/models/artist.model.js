@@ -1,3 +1,4 @@
+const { GENRE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
 
 class Artist extends Model {}
@@ -5,41 +6,35 @@ class Artist extends Model {}
 Artist.init(
   {
     id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
-    },
-    user_id: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: {
-        model: 'users',
-        key: 'id',
-      },
+      autoIncrement: true,
     },
     name: {
       type: DataTypes.STRING(255),
       allowNull: false,
     },
-    biography: {
+    bio: {
       type: DataTypes.TEXT,
-      allowNull: true,
+    },
+    genre: {
+      type: DataTypes.ENUM(...Object.values(GENRE)),
     },
     country: {
-      type: DataTypes.STRING(255),
-      allowNull: true,
+      type: DataTypes.STRING(100),
     },
-    images: {
-      type: DataTypes.JSONB,
-      allowNull: true,
+    spotify_url: {
+      type: DataTypes.TEXT,
     },
-    createdAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
+    image_url: {
+      type: DataTypes.TEXT,
     },
-    updatedAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
+    total_listeners: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    phonetic_name: {
+      type: DataTypes.TEXT,
     },
   },
   {
@@ -47,7 +42,16 @@ Artist.init(
     modelName: 'Artist',
     tableName: 'artists',
     timestamps: true,
-    underscored: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+    indexes: [
+      {
+        fields: ['name'],
+      },
+      {
+        fields: ['phonetic_name'],
+      },
+    ],
   },
 );
 
