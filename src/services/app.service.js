@@ -67,7 +67,7 @@ app.use(
   swaggerUi.setup(swaggerSpec, {
     explorer: true,
     customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'Spotify Clone API Documentation',
+    customSiteTitle: 'Zakharmony API Documentation',
     customfavIcon: '/assets/favicon.ico',
     swaggerOptions: {
       persistAuthorization: true,

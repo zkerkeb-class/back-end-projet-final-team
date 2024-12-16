@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const BaseService = require('./base.service');
-const { User, Role } = require('../models');
+const { User, UserRole, Role } = require('../models');
 const { Op } = require('sequelize');
 
 class UserService extends BaseService {
@@ -17,6 +17,12 @@ class UserService extends BaseService {
         ...userData,
         password_hash: hashedPassword,
       });
+
+      await UserRole.create({
+        user_id: user.id,
+        role_id: userData.user_type === 'standard' ? 1 : 2,
+      });
+
       return this.sanitizeUser(user);
     } catch (error) {
       throw new Error(`Registration failed: ${error.message}`);
