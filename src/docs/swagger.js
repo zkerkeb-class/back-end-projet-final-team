@@ -83,7 +83,6 @@ const options = {
             bio: { type: 'string' },
             genre: { $ref: '#/components/schemas/Genre' },
             country: { type: 'string' },
-            spotify_url: { type: 'string', format: 'uri' },
             image_url: { type: 'string', format: 'uri' },
             total_listeners: { type: 'integer' },
             phonetic_name: { type: 'string' },

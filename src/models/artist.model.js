@@ -23,12 +23,6 @@ Artist.init(
     country: {
       type: DataTypes.STRING(100),
     },
-    spotify_url: {
-      type: DataTypes.TEXT,
-    },
-    image_url: {
-      type: DataTypes.TEXT,
-    },
     total_listeners: {
       type: DataTypes.INTEGER,
       defaultValue: 0,

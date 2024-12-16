@@ -97,7 +97,6 @@ async function seedDatabase() {
             bio: faker.lorem.paragraph(),
             genre: faker.helpers.arrayElement(Object.values(GENRE)),
             country: faker.location.country(),
-            spotify_url: faker.internet.url(),
             image_url: faker.image.avatar(),
             phonetic_name: faker.person.fullName(),
             total_listeners: faker.number.int({ min: 1000, max: 1000000 }),

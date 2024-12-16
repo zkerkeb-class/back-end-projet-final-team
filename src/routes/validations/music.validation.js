@@ -119,7 +119,6 @@ const artistSchema = Joi.object({
   }),
 
   bio: Joi.string().allow('', null),
-  spotify_url: Joi.string().uri().allow('', null),
   image_url: Joi.string().uri().allow('', null),
   phonetic_name: Joi.string().allow('', null),
 });

@@ -211,9 +211,6 @@ router.use(authenticate);
  *               country:
  *                 type: string
  *                 description: Artist's country
- *               spotify_url:
- *                 type: string
- *                 format: uri
  *               image_url:
  *                 type: string
  *                 format: uri
