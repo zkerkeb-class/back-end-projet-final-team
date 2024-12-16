@@ -72,7 +72,20 @@ const {
 router.post('/register', validate(registerSchema), async (req, res, next) => {
   try {
     const user = await userService.register(req.body);
-    res.status(201).json(user);
+    res.status(201).json({
+      accessToken: user.accessToken,
+      refreshToken: user.refreshToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        roles: user.roles,
+        user_type: user.user_type,
+        profile_picture_url: user.profile_picture_url,
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -125,7 +138,20 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const result = await userService.login(email, password);
-    res.json(result);
+    res.json({
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        username: result.user.username,
+        first_name: result.user.first_name,
+        last_name: result.user.last_name,
+        roles: result.user.roles,
+        profile_picture_url: result.user.profile_picture_url,
+        user_type: result.user.user_type,
+      },
+    });
   } catch (error) {
     next(error);
   }
