@@ -5,29 +5,27 @@ class PlaylistTrack extends Model {}
 PlaylistTrack.init(
   {
     playlist_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
+      primaryKey: true,
       references: {
         model: 'playlists',
         key: 'id',
       },
-      primaryKey: true,
     },
     track_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
+      primaryKey: true,
       references: {
         model: 'tracks',
         key: 'id',
       },
-      primaryKey: true,
     },
-    position: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    addedAt: {
+    added_at: {
       type: DataTypes.DATE,
       defaultValue: DataTypes.NOW,
-      field: 'added_at',
+    },
+    track_order: {
+      type: DataTypes.INTEGER,
     },
   },
   {
@@ -35,7 +33,6 @@ PlaylistTrack.init(
     modelName: 'PlaylistTrack',
     tableName: 'playlist_tracks',
     timestamps: false,
-    underscored: true,
   },
 );
 

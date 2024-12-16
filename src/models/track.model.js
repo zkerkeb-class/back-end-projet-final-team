@@ -1,3 +1,4 @@
+const { GENRE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
 
 class Track extends Model {}
@@ -5,69 +6,62 @@ class Track extends Model {}
 Track.init(
   {
     id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
-    },
-    artistId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'artists',
-        key: 'id',
-      },
-    },
-    albumId: {
-      type: DataTypes.UUID,
-      allowNull: true,
-      references: {
-        model: 'albums',
-        key: 'id',
-      },
+      autoIncrement: true,
     },
     title: {
       type: DataTypes.STRING(255),
       allowNull: false,
     },
-    durationSecondes: {
+    album_id: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      references: {
+        model: 'albums',
+        key: 'id',
+      },
     },
-    audioFiles: {
-      type: DataTypes.JSONB,
-      allowNull: false,
+    artist_id: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'artists',
+        key: 'id',
+      },
     },
-    coverImages: {
-      type: DataTypes.JSONB,
-      allowNull: true,
+    duration_seconds: {
+      type: DataTypes.INTEGER,
     },
-    waveFormData: {
-      type: DataTypes.TEXT,
-      allowNull: true,
+    track_number: {
+      type: DataTypes.INTEGER,
     },
     lyrics: {
       type: DataTypes.TEXT,
-      allowNull: true,
     },
-    playCount: {
+    genre: {
+      type: DataTypes.ENUM(...Object.values(GENRE)),
+    },
+    audio_file_path: {
+      type: DataTypes.TEXT,
+    },
+    file_formats: {
+      type: DataTypes.ARRAY(DataTypes.TEXT),
+    },
+    popularity_score: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0,
+    },
+    total_plays: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
-    averageRating: {
-      type: DataTypes.FLOAT(),
-      defaultValue: 0,
+    release_date: {
+      type: DataTypes.DATEONLY,
     },
-    year: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
+    phonetic_title: {
+      type: DataTypes.TEXT,
     },
-    createdAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
-    },
-    updatedAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
+    musical_features: {
+      type: DataTypes.JSONB,
     },
   },
   {
@@ -75,11 +69,17 @@ Track.init(
     modelName: 'Track',
     tableName: 'tracks',
     timestamps: true,
-    underscored: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
     indexes: [
       {
-        unique: true,
-        fields: ['title', 'artist_id', 'album_id'],
+        fields: ['title'],
+      },
+      {
+        fields: ['popularity_score'],
+      },
+      {
+        fields: ['phonetic_title'],
       },
     ],
   },

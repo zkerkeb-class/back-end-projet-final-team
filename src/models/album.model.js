@@ -1,50 +1,45 @@
+const { GENRE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
-const musicGenres = require('../constants/musicGenres');
 
 class Album extends Model {}
 
 Album.init(
   {
     id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
-    },
-    artistId: {
-      type: DataTypes.UUID,
-      allowNull: false,
-      references: {
-        model: 'artists',
-        key: 'id',
-      },
+      autoIncrement: true,
     },
     title: {
       type: DataTypes.STRING(255),
       allowNull: false,
     },
-    releaseYear: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
+    release_date: {
+      type: DataTypes.DATEONLY,
     },
     genre: {
-      type: DataTypes.ENUM(musicGenres),
-      allowNull: true,
+      type: DataTypes.ENUM(...Object.values(GENRE)),
     },
-    coverImages: {
-      type: DataTypes.JSONB,
-      allowNull: true,
-    },
-    totalTracks: {
+    primary_artist_id: {
       type: DataTypes.INTEGER,
-      allowNull: true,
+      references: {
+        model: 'artists',
+        key: 'id',
+      },
     },
-    createdAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
+    total_tracks: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
     },
-    updatedAt: {
-      type: DataTypes.DATE,
-      defaultValue: DataTypes.NOW,
+    cover_art_url: {
+      type: DataTypes.TEXT,
+    },
+    total_duration_seconds: {
+      type: DataTypes.INTEGER,
+    },
+    popularity_score: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0,
     },
   },
   {
@@ -52,7 +47,13 @@ Album.init(
     modelName: 'Album',
     tableName: 'albums',
     timestamps: true,
-    underscored: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+    indexes: [
+      {
+        fields: ['release_date'],
+      },
+    ],
   },
 );
 

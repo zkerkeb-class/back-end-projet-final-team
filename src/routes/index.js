@@ -1,24 +1,34 @@
-const Express = require('express');
-const swaggerDocument = require('../docs/swagger.json');
-const swaggerUIPath = require('swagger-ui-express');
-const ArtistRouter = require('./artist.route');
-const UserRouter = require('./user.route');
-const AuthRouter = require('./auth.route');
-const TrackRouter = require('./track.route');
-const AlbumRouter = require('./album.route');
-const PlaylistRouter = require('./playlist.route');
+const router = require('express').Router();
+const authRoutes = require('./auth.routes');
+const artistRoutes = require('./artist.routes');
+const albumRoutes = require('./album.routes');
+const trackRoutes = require('./track.routes');
+const playlistRoutes = require('./playlist.routes');
+const logger = require('../utils/loggerUtil');
 
-const router = Express.Router();
-router.use('/artist', ArtistRouter);
-router.use('/album', AlbumRouter);
-router.use('/playlist', PlaylistRouter);
-router.use('/track', TrackRouter);
-router.use('/user', UserRouter);
-router.use('/auth', AuthRouter);
-router.use(
-  '/api-docs',
-  swaggerUIPath.serve,
-  swaggerUIPath.setup(swaggerDocument),
-);
+// Mount routes
+router.use(`/auth`, authRoutes);
+router.use(`/artists`, artistRoutes);
+router.use(`/albums`, albumRoutes);
+router.use(`/tracks`, trackRoutes);
+router.use(`/playlists`, playlistRoutes);
+
+// Health check endpoint
+router.get(`/health`, (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// 404 handler
+router.use((req, res) => {
+  res.status(404).json({ message: 'Not found' });
+});
+
+// Error handler
+router.use((err, req, res, _next) => {
+  logger.error(err.stack);
+  res.status(err.status || 500).json({
+    message: err.message || 'Internal server error',
+  });
+});
 
 module.exports = router;

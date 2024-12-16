@@ -5,24 +5,24 @@ class Role extends Model {}
 Role.init(
   {
     id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
+      autoIncrement: true,
     },
     name: {
-      type: DataTypes.STRING,
-      allowNull: false,
+      type: DataTypes.STRING(50),
       unique: true,
+      allowNull: false,
     },
-    permissions: {
-      type: DataTypes.ARRAY(DataTypes.STRING),
-      defaultValue: [],
+    description: {
+      type: DataTypes.TEXT,
     },
   },
   {
     sequelize,
+    modelName: 'Role',
     tableName: 'roles',
-    timeStamps: false,
+    timestamps: false,
   },
 );
 

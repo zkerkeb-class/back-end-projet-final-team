@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const config = require('../config');
 const apiRouter = require('../routes');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('../docs/swagger');
 const {
   logger,
   configureLogger,
@@ -58,5 +60,22 @@ app.use((err, req, res, _next) => {
 app.get('/api/health', (_req, res) => {
   res.status(200).json({ status: 'ok' });
 });
+
+app.use(
+  '/api-docs',
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpec, {
+    explorer: true,
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Spotify Clone API Documentation',
+    customfavIcon: '/assets/favicon.ico',
+    swaggerOptions: {
+      persistAuthorization: true,
+      displayRequestDuration: true,
+      filter: true,
+      deepLinking: true,
+    },
+  }),
+);
 
 module.exports = { app, logger };

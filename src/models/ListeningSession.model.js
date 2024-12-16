@@ -1,46 +1,43 @@
 const { sequelize, DataTypes, Model } = require('../services/db.service');
 
-class Playlist extends Model {}
+class ListeningSession extends Model {}
 
-Playlist.init(
+ListeningSession.init(
   {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-    name: {
-      type: DataTypes.STRING(255),
+    session_code: {
+      type: DataTypes.STRING(50),
+      unique: true,
       allowNull: false,
     },
-    creator_id: {
+    current_track_id: {
       type: DataTypes.INTEGER,
       references: {
-        model: 'users',
+        model: 'tracks',
         key: 'id',
       },
     },
-    is_public: {
+    current_position_seconds: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    is_playing: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
-    },
-    total_tracks: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0,
-    },
-    total_duration_seconds: {
-      type: DataTypes.INTEGER,
-      defaultValue: 0,
     },
   },
   {
     sequelize,
-    modelName: 'Playlist',
-    tableName: 'playlists',
+    modelName: 'ListeningSession',
+    tableName: 'listening_sessions',
     timestamps: true,
     createdAt: 'created_at',
-    updatedAt: 'updated_at',
+    updatedAt: false,
   },
 );
 
-module.exports = Playlist;
+module.exports = ListeningSession;
