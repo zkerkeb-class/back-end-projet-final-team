@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 const BaseService = require('./base.service');
-const { User, UserRole, Role } = require('../models');
+const { User, UserRole, Role, Artist } = require('../models');
 const { Op } = require('sequelize');
 
 class UserService extends BaseService {
@@ -17,6 +17,12 @@ class UserService extends BaseService {
         ...userData,
         password_hash: hashedPassword,
       });
+
+      if (userData.user_type === 'artist') {
+        await Artist.create({
+          user_id: user.id,
+        });
+      }
 
       await UserRole.create({
         user_id: user.id,
