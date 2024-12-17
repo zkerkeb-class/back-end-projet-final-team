@@ -1,7 +1,15 @@
 const { USER_TYPE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
 
-class User extends Model {}
+class User extends Model {
+  getProfilePictureUrl(size = 'medium', format = 'webp') {
+    const profilePicture = this.getDataValue('profile_picture');
+    if (!profilePicture?.urls?.[size]?.[format]) {
+      return null;
+    }
+    return profilePicture.urls[size][format];
+  }
+}
 
 User.init(
   {
@@ -38,8 +46,46 @@ User.init(
     last_name: {
       type: DataTypes.STRING(100),
     },
+    profile_picture: {
+      type: DataTypes.JSONB,
+      defaultValue: null,
+      validate: {
+        isValidImageFormat(value) {
+          if (value === null) return;
+
+          const requiredSizes = ['original', 'thumbnail', 'medium', 'large'];
+          const requiredFormats = ['webp', 'jpeg', 'png'];
+
+          if (!value.urls || typeof value.urls !== 'object') {
+            throw new Error('Invalid profile picture format');
+          }
+
+          // Verify all required sizes exist
+          for (const size of requiredSizes) {
+            if (!value.urls[size] || typeof value.urls[size] !== 'object') {
+              throw new Error(`Missing or invalid size: ${size}`);
+            }
+
+            // Verify each size has all required formats
+            for (const format of requiredFormats) {
+              if (
+                !value.urls[size][format] ||
+                typeof value.urls[size][format] !== 'string'
+              ) {
+                throw new Error(
+                  `Missing or invalid format ${format} for size ${size}`,
+                );
+              }
+            }
+          }
+        },
+      },
+    },
     profile_picture_url: {
-      type: DataTypes.TEXT,
+      type: DataTypes.VIRTUAL,
+      get() {
+        return this.getProfilePictureUrl();
+      },
     },
     artist_id: {
       type: DataTypes.INTEGER,

@@ -1,9 +1,11 @@
 const router = require('express').Router();
+const logger = require('../utils/loggerUtil');
 const {
   registerUser,
   loginUser,
   refreshToken,
   logoutUser,
+  updateProfilePicture,
 } = require('../controllers/auth.controller');
 const { authenticate } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
@@ -21,17 +23,20 @@ const {
  *   name: Authentication
  *   description: User authentication and authorization
  */
-const getDataFromRequest = (req, res, next) => {
-  console.log(req.body);
 
-  req.body = {
-    ...req.body,
-    ...req.body.data,
-  };
-  delete req.body.data;
-
+// Middleware to parse form data
+const parseFormData = (req, res, next) => {
+  if (req.body.data) {
+    try {
+      req.body = { ...JSON.parse(req.body.data) };
+    } catch (error) {
+      logger.error(error);
+      return res.status(400).json({ message: 'Invalid JSON in form data' });
+    }
+  }
   next();
 };
+
 /**
  * @swagger
  * /auth/register:
@@ -41,37 +46,18 @@ const getDataFromRequest = (req, res, next) => {
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
- *               - email
- *               - password
- *               - username
- *               - user_type
+ *               - data
  *             properties:
- *               email:
+ *               data:
  *                 type: string
- *                 format: email
- *                 description: User's email address
- *               password:
+ *                 description: JSON string containing user data
+ *               profile_picture:
  *                 type: string
- *                 format: password
- *                 minLength: 6
- *                 description: User's password
- *               username:
- *                 type: string
- *                 minLength: 3
- *                 description: User's username
- *               user_type:
- *                 $ref: '#/components/schemas/UserType'
- *               first_name:
- *                 type: string
- *               last_name:
- *                 type: string
- *               profile_picture_url:
- *                 type: string
- *                 format: uri
+ *                 format: binary
  *     responses:
  *       201:
  *         description: User successfully registered
@@ -79,20 +65,50 @@ const getDataFromRequest = (req, res, next) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/User'
- *       400:
- *         description: Validation error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
 router.post(
   '/register',
-  getDataFromRequest,
-  validate(registerSchema),
   upload.single('profile_picture'),
+  parseFormData,
+  validate(registerSchema),
   validateImageUpload,
   registerUser,
+);
+
+/**
+ * @swagger
+ * /auth/profile-picture:
+ *   put:
+ *     summary: Update user profile picture
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - profile_picture
+ *             properties:
+ *               profile_picture:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Profile picture updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ */
+router.put(
+  '/profile-picture',
+  authenticate,
+  upload.single('profile_picture'),
+  validateImageUpload,
+  updateProfilePicture,
 );
 
 /**
@@ -125,18 +141,12 @@ router.post(
  *             schema:
  *               type: object
  *               properties:
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
  *                 accessToken:
  *                   type: string
  *                 refreshToken:
  *                   type: string
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *       401:
- *         description: Invalid credentials
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
 router.post('/login', validate(loginSchema), loginUser);
 
