@@ -4,6 +4,7 @@ const config = require('../config');
 const BaseService = require('./base.service');
 const { User, UserRole, Role, Artist } = require('../models');
 const { Op } = require('sequelize');
+const cdnService = require('./cdn.service');
 
 class UserService extends BaseService {
   constructor() {
@@ -13,15 +14,25 @@ class UserService extends BaseService {
   async register(userData) {
     try {
       const hashedPassword = await bcrypt.hash(userData.password, 10);
+
+      let profilePicture = null;
+      if (userData.profilePictureBuffer) {
+        profilePicture = await cdnService.processProfilePicture(
+          userData.profilePictureBuffer,
+        );
+      }
+
       const user = await this.create({
         ...userData,
         password_hash: hashedPassword,
+        profile_picture: profilePicture,
       });
 
       if (userData.user_type === 'artist') {
-        await Artist.create({
-          user_id: user.id,
+        const artist = await Artist.create({
+          name: userData.username,
         });
+        await user.update({ artist_id: artist.id });
       }
 
       await UserRole.create({
@@ -32,6 +43,25 @@ class UserService extends BaseService {
       return this.sanitizeUser(user);
     } catch (error) {
       throw new Error(`Registration failed: ${error.message}`);
+    }
+  }
+
+  async updateProfilePicture(userId, imageBuffer) {
+    try {
+      const user = await this.findById(userId);
+
+      // Delete old profile picture if exists
+      if (user.profile_picture?.baseKey) {
+        await cdnService.deleteProfilePicture(user.profile_picture.baseKey);
+      }
+
+      const profilePicture =
+        await cdnService.processProfilePicture(imageBuffer);
+
+      await user.update({ profile_picture: profilePicture });
+      return this.sanitizeUser(user);
+    } catch (error) {
+      throw new Error(`Failed to update profile picture: ${error.message}`);
     }
   }
 
