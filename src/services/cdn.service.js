@@ -12,8 +12,8 @@ class CdnService {
     };
   }
 
-  async processProfilePicture(buffer) {
-    const baseKey = createUniqueId('profile-pictures');
+  async processImage(buffer, baseKeyPrefix) {
+    const baseKey = createUniqueId(baseKeyPrefix);
 
     const urls = {
       original: {},
@@ -62,52 +62,12 @@ class CdnService {
     };
   }
 
+  async processProfilePicture(buffer) {
+    return this.processImage(buffer, 'profile-pictures');
+  }
+
   async processPlaylistPicture(buffer) {
-    const baseKey = createUniqueId('playlist-pictures');
-
-    const urls = {
-      medium: {},
-      large: {},
-      original: {},
-      thumbnail: {},
-    };
-
-    for (const format of this.allowedFormats) {
-      const processedBuffer = await sharp(buffer).toFormat(format).toBuffer();
-
-      const key = `${baseKey}/original.${format}`;
-      const url = await s3Service.uploadBuffer(
-        processedBuffer,
-        key,
-        `image/${format}`,
-      );
-      urls.original[format] = url;
-    }
-
-    for (const [size, dimensions] of Object.entries(this.sizes)) {
-      for (const format of this.allowedFormats) {
-        const processedBuffer = await sharp(buffer)
-          .resize(dimensions.width, dimensions.height, {
-            fit: 'cover',
-            position: 'center',
-          })
-          .toFormat(format)
-          .toBuffer();
-
-        const key = `${baseKey}/${size}.${format}`;
-        const url = await s3Service.uploadBuffer(
-          processedBuffer,
-          key,
-          `image/${format}`,
-        );
-        urls[size][format] = url;
-      }
-    }
-
-    return {
-      urls,
-      baseKey,
-    };
+    return this.processImage(buffer, 'playlist-pictures');
   }
 
   async deleteProfilePicture(baseKey) {
