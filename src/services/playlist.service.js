@@ -1,6 +1,7 @@
 const BaseService = require('./base.service');
 const { Playlist, Track, Artist, Album, PlaylistTrack } = require('../models');
 const { Op } = require('sequelize');
+const cdnService = require('./cdn.service');
 
 class PlaylistService extends BaseService {
   constructor() {
@@ -15,6 +16,24 @@ class PlaylistService extends BaseService {
       });
     } catch (error) {
       throw new Error(`Error creating playlist: ${error.message}`);
+    }
+  }
+
+  async updatePlaylist(playlistId, playlistData) {
+    try {
+      let coverImage = null;
+      if (playlistData.cover_image) {
+        coverImage = await cdnService.processPlaylistPicture(
+          playlistData.cover_image,
+        );
+      }
+
+      return await this.update(playlistId, {
+        ...playlistData,
+        cover_images: coverImage,
+      });
+    } catch (error) {
+      throw new Error(`Error updating playlist: ${error.message}`);
     }
   }
 

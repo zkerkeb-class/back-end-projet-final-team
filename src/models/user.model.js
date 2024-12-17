@@ -1,5 +1,6 @@
 const { USER_TYPE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
+const isValidImageFormat = require('../utils/isValideImageFormat');
 
 class User extends Model {
   getProfilePictureUrl(size = 'medium', format = 'webp') {
@@ -50,35 +51,7 @@ User.init(
       type: DataTypes.JSONB,
       defaultValue: null,
       validate: {
-        isValidImageFormat(value) {
-          if (value === null) return;
-
-          const requiredSizes = ['original', 'thumbnail', 'medium', 'large'];
-          const requiredFormats = ['webp', 'jpeg', 'png'];
-
-          if (!value.urls || typeof value.urls !== 'object') {
-            throw new Error('Invalid profile picture format');
-          }
-
-          // Verify all required sizes exist
-          for (const size of requiredSizes) {
-            if (!value.urls[size] || typeof value.urls[size] !== 'object') {
-              throw new Error(`Missing or invalid size: ${size}`);
-            }
-
-            // Verify each size has all required formats
-            for (const format of requiredFormats) {
-              if (
-                !value.urls[size][format] ||
-                typeof value.urls[size][format] !== 'string'
-              ) {
-                throw new Error(
-                  `Missing or invalid format ${format} for size ${size}`,
-                );
-              }
-            }
-          }
-        },
+        isValidImageFormat,
       },
     },
     profile_picture_url: {

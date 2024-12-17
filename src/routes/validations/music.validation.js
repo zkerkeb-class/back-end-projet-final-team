@@ -93,10 +93,8 @@ const playlistSchema = Joi.object({
     'string.empty': 'Name cannot be empty',
   }),
 
-  is_public: Joi.boolean().required().messages({
-    'any.required': 'Public/private status is required',
-    'boolean.base': 'Public/private status must be a boolean',
-  }),
+  is_public: Joi.boolean().allow(true, false),
+  cover_image: Joi.object().allow(null),
 });
 
 const artistSchema = Joi.object({

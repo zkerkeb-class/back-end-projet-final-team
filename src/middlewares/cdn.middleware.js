@@ -55,7 +55,7 @@ const negotiateImageFormat = (req, res, next) => {
  */
 const validateImageUpload = (req, res, next) => {
   if (!req.file && !req.files) {
-    return res.status(400).json({ message: 'No image file provided' });
+    next();
   }
 
   const file = req.file || req.files[0];

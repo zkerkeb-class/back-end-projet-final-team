@@ -1,4 +1,5 @@
 const { sequelize, DataTypes, Model } = require('../services/db.service');
+const isValidImageFormat = require('../utils/isValideImageFormat');
 
 class Playlist extends Model {}
 
@@ -31,6 +32,13 @@ Playlist.init(
     total_duration_seconds: {
       type: DataTypes.INTEGER,
       defaultValue: 0,
+    },
+    cover_images: {
+      type: DataTypes.JSONB,
+      defaultValue: null,
+      validate: {
+        isValidImageFormat,
+      },
     },
   },
   {

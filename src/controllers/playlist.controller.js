@@ -44,17 +44,20 @@ const getPlaylistById = async (req, res, _next) => {
 
 const updatePlaylist = async (req, res, next) => {
   try {
+    const playlistData = {
+      ...req.body,
+      cover_image: req.file?.buffer,
+    };
     const playlist = await playlistService.findById(req.params.id);
-
     if (playlist.creator_id !== req.user.id) {
       return res
         .status(403)
         .json({ message: 'You can only update your own playlists' });
     }
 
-    const updatedPlaylist = await playlistService.update(
+    const updatedPlaylist = await playlistService.updatePlaylist(
       req.params.id,
-      req.body,
+      playlistData,
     );
     res.json(updatedPlaylist);
   } catch (error) {
