@@ -18,6 +18,7 @@ const { validateImageUpload } = require('../middlewares/cdn.middleware');
  *   description: Playlist management and retrieval operations
  */
 
+//#region
 /**
  * @swagger
  * /playlists:
@@ -41,6 +42,7 @@ const { validateImageUpload } = require('../middlewares/cdn.middleware');
  *                         items:
  *                           $ref: '#/components/schemas/Track'
  */
+//#endregion
 router.get('/', async (req, res, next) => {
   try {
     const playlists = await playlistService.findAll({
@@ -53,6 +55,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /playlists/search:
@@ -76,6 +79,7 @@ router.get('/', async (req, res, next) => {
  *               items:
  *                 $ref: '#/components/schemas/Playlist'
  */
+//#endregion
 router.get('/search', async (req, res, next) => {
   try {
     const playlists = await playlistService.searchPlaylists(req.query.q);
@@ -85,6 +89,7 @@ router.get('/search', async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /playlists/{id}:
@@ -115,6 +120,7 @@ router.get('/search', async (req, res, next) => {
  *       404:
  *         description: Playlist not found or not accessible
  */
+//#endregion
 router.get('/:id', async (req, res, next) => {
   try {
     const playlist = await playlistService.getPlaylistWithTracks(req.params.id);
@@ -130,6 +136,7 @@ router.get('/:id', async (req, res, next) => {
 // Protected routes
 router.use(authenticate);
 
+//#region
 /**
  * @swagger
  * /playlists/user:
@@ -150,6 +157,7 @@ router.use(authenticate);
  *       401:
  *         description: Unauthorized
  */
+//#endregion
 router.get('/user', async (req, res, next) => {
   try {
     const playlists = await playlistService.findAll({
@@ -162,6 +170,7 @@ router.get('/user', async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /playlists:
@@ -198,8 +207,10 @@ router.get('/user', async (req, res, next) => {
  *       401:
  *         description: Unauthorized
  */
+//#endregion
 router.post('/', createPlaylist);
 
+//#region
 /**
  * @swagger
  * /playlists/{id}:
@@ -237,6 +248,7 @@ router.post('/', createPlaylist);
  *       404:
  *         description: Playlist not found
  */
+//#endregion
 router.put(
   '/:id',
   upload.single('cover_image'),
@@ -246,6 +258,7 @@ router.put(
   updatePlaylist,
 );
 
+//#region
 /**
  * @swagger
  * /playlists/{id}:
@@ -271,6 +284,7 @@ router.put(
  *       404:
  *         description: Playlist not found
  */
+//#endregion
 router.delete('/:id', async (req, res, next) => {
   try {
     const playlist = await playlistService.findById(req.params.id);
@@ -288,6 +302,7 @@ router.delete('/:id', async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /playlists/{id}/tracks:
@@ -331,6 +346,7 @@ router.delete('/:id', async (req, res, next) => {
  *       404:
  *         description: Playlist not found
  */
+//#endregion
 router.post('/:id/tracks', async (req, res, next) => {
   try {
     const playlist = await playlistService.findById(req.params.id);
@@ -351,6 +367,7 @@ router.post('/:id/tracks', async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /playlists/{id}/tracks/{trackId}:
@@ -382,6 +399,7 @@ router.post('/:id/tracks', async (req, res, next) => {
  *       404:
  *         description: Playlist or track not found
  */
+//#endregion
 router.delete('/:id/tracks/:trackId', async (req, res, next) => {
   try {
     const playlist = await playlistService.findById(req.params.id);
