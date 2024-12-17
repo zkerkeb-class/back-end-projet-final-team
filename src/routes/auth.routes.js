@@ -1,5 +1,4 @@
 const router = require('express').Router();
-const logger = require('../utils/loggerUtil');
 const {
   registerUser,
   loginUser,
@@ -11,6 +10,7 @@ const { authenticate } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
 const upload = require('../config/multer');
 const { validateImageUpload } = require('../middlewares/cdn.middleware');
+const parseFormData = require('../middlewares/parseFormData.middleware');
 const {
   registerSchema,
   loginSchema,
@@ -23,19 +23,6 @@ const {
  *   name: Authentication
  *   description: User authentication and authorization
  */
-
-// Middleware to parse form data
-const parseFormData = (req, res, next) => {
-  if (req.body.data) {
-    try {
-      req.body = { ...JSON.parse(req.body.data) };
-    } catch (error) {
-      logger.error(error);
-      return res.status(400).json({ message: 'Invalid JSON in form data' });
-    }
-  }
-  next();
-};
 
 /**
  * @swagger

@@ -1,8 +1,15 @@
 const router = require('express').Router();
 const { playlistService } = require('../services');
 const { authenticate } = require('../middlewares/auth.middleware');
+const {
+  createPlaylist,
+  updatePlaylist,
+} = require('../controllers/playlist.controller');
 const validate = require('../middlewares/validation.middleware');
 const { playlistSchema } = require('./validations/music.validation');
+const parseFormData = require('../middlewares/parseFormData.middleware');
+const upload = require('../config/multer');
+const { validateImageUpload } = require('../middlewares/cdn.middleware');
 
 /**
  * @swagger
@@ -191,17 +198,7 @@ router.get('/user', async (req, res, next) => {
  *       401:
  *         description: Unauthorized
  */
-router.post('/', validate(playlistSchema), async (req, res, next) => {
-  try {
-    const playlist = await playlistService.create({
-      ...req.body,
-      creator_id: req.user.id,
-    });
-    res.status(201).json(playlist);
-  } catch (error) {
-    next(error);
-  }
-});
+router.post('/', createPlaylist);
 
 /**
  * @swagger
@@ -240,25 +237,14 @@ router.post('/', validate(playlistSchema), async (req, res, next) => {
  *       404:
  *         description: Playlist not found
  */
-router.put('/:id', validate(playlistSchema), async (req, res, next) => {
-  try {
-    const playlist = await playlistService.findById(req.params.id);
-
-    if (playlist.creator_id !== req.user.id) {
-      return res
-        .status(403)
-        .json({ message: 'You can only update your own playlists' });
-    }
-
-    const updatedPlaylist = await playlistService.update(
-      req.params.id,
-      req.body,
-    );
-    res.json(updatedPlaylist);
-  } catch (error) {
-    next(error);
-  }
-});
+router.put(
+  '/:id',
+  upload.single('cover_image'),
+  parseFormData,
+  validate(playlistSchema),
+  validateImageUpload,
+  updatePlaylist,
+);
 
 /**
  * @swagger

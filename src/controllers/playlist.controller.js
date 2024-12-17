@@ -1,15 +1,19 @@
 const { playlist } = require('../models');
+const { playlistService } = require('../services');
 
-const createPlaylist = async (req, res, _next) => {
+const createPlaylist = async (req, res, next) => {
   try {
-    const { playlist: playlistData } = req.body;
-    const newPlaylist = await playlist.create(playlistData);
-    return res.status(201).send({
-      message: 'Playlist created successfully',
-      playlist: newPlaylist,
+    const playlists = await playlistService.findAll({
+      where: { creator_id: req.user.id },
     });
+    const playlist = await playlistService.create({
+      creator_id: req.user.id,
+      is_public: true,
+      name: `My playlist n°${playlists.length + 1}`,
+    });
+    res.status(201).json(playlist);
   } catch (error) {
-    return res.status(500).send({ error: error.message });
+    next(error);
   }
 };
 
@@ -38,26 +42,23 @@ const getPlaylistById = async (req, res, _next) => {
   }
 };
 
-const updatePlaylist = async (req, res, _next) => {
+const updatePlaylist = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const [updatedRowsCount] = await playlist.update(req.body, {
-      where: { id: id },
-    });
-    if (updatedRowsCount === 0) {
-      return res.status(404).send({ message: 'Playlist not found' });
+    const playlist = await playlistService.findById(req.params.id);
+
+    if (playlist.creator_id !== req.user.id) {
+      return res
+        .status(403)
+        .json({ message: 'You can only update your own playlists' });
     }
 
-    const updatedPlaylist = await playlist.findByPk(id, {
-      attributes: { exclude: ['deletedAt', 'updatedAt'] },
-    });
-
-    return res.status(200).send({
-      message: 'Playlist updated successfully',
-      playlist: updatedPlaylist,
-    });
+    const updatedPlaylist = await playlistService.update(
+      req.params.id,
+      req.body,
+    );
+    res.json(updatedPlaylist);
   } catch (error) {
-    return res.status(500).send({ error: error.message });
+    next(error);
   }
 };
 
