@@ -170,7 +170,10 @@ router.delete('/:id', async (req, res, next) => {
         .json({ message: 'You can only delete your own playlists' });
     }
 
-    await playlistService.delete(req.params.id);
+    await playlistService.deletePlaylist(
+      req.params.id,
+      playlist.cover_images?.baseKey,
+    );
     res.status(204).end();
   } catch (error) {
     next(error);

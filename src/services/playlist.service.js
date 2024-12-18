@@ -45,11 +45,10 @@ class PlaylistService extends BaseService {
       const playlist = await this.findById(playlistId);
 
       // Delete old cover image if exists
-      if (playlist.cover_image?.baseKey) {
-        await cdnService.deleteProfilePicture(playlist.cover_image.baseKey);
+      if (playlist.cover_images?.baseKey) {
+        await cdnService.deleteProfilePictures(playlist.cover_images.baseKey);
       }
 
-      // Process and upload new cover image
       const coverImage = await cdnService.processPlaylistPicture(imageBuffer);
 
       return await this.update(playlistId, {
@@ -57,6 +56,17 @@ class PlaylistService extends BaseService {
       });
     } catch (error) {
       throw new Error(`Error updating playlist cover: ${error.message}`);
+    }
+  }
+
+  async deletePlaylist(playlistId, baseKey) {
+    try {
+      if (baseKey) {
+        await cdnService.deleteProfilePictures(baseKey);
+      }
+      return await this.delete(playlistId);
+    } catch (error) {
+      throw new Error(`Error deleting playlist: ${error.message}`);
     }
   }
 

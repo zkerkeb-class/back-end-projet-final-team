@@ -1,8 +1,8 @@
 const {
   S3Client,
   PutObjectCommand,
-  DeleteObjectCommand,
   DeleteObjectsCommand,
+  ListObjectsV2Command,
 } = require('@aws-sdk/client-s3');
 const config = require('../config');
 
@@ -36,25 +36,39 @@ class S3Service {
     return this.getPublicUrl(key);
   }
 
-  async deleteObject(key) {
-    const command = new DeleteObjectCommand({
-      Bucket: this.bucket,
-      Key: key,
-    });
+  async deleteFolder(baseKey) {
+    try {
+      let continuationToken = undefined;
 
-    await this.s3Client.send(command);
-  }
+      do {
+        // List all objects in the folder
+        const listCommand = new ListObjectsV2Command({
+          Bucket: this.bucket,
+          Prefix: baseKey,
+          ContinuationToken: continuationToken,
+        });
 
-  async deleteObjects(keys) {
-    const command = new DeleteObjectsCommand({
-      Bucket: this.bucket,
-      Delete: {
-        Objects: keys.map((key) => ({ Key: key })),
-        Quiet: true,
-      },
-    });
+        const listedObjects = await this.s3Client.send(listCommand);
 
-    await this.s3Client.send(command);
+        if (listedObjects.Contents && listedObjects.Contents.length > 0) {
+          // Delete all listed objects
+          const deleteCommand = new DeleteObjectsCommand({
+            Bucket: this.bucket,
+            Delete: {
+              Objects: listedObjects.Contents.map(({ Key }) => ({ Key })),
+              Quiet: true,
+            },
+          });
+
+          await this.s3Client.send(deleteCommand);
+        }
+
+        // Check if there are more objects to delete
+        continuationToken = listedObjects.NextContinuationToken;
+      } while (continuationToken);
+    } catch (error) {
+      throw new Error(`Error deleting folder ${baseKey}: ${error.message}`);
+    }
   }
 
   getPublicUrl(key) {

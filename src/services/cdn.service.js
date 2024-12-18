@@ -70,21 +70,9 @@ class CdnService {
     return this.processImage(buffer, 'playlist-pictures');
   }
 
-  async deleteProfilePicture(baseKey) {
-    const keys = [];
-
-    // Generate all possible keys
-    keys.push(`${baseKey}/original.webp`);
-    keys.push(`${baseKey}/original.jpeg`);
-    keys.push(`${baseKey}/original.png`);
-
-    for (const size of Object.keys(this.sizes)) {
-      for (const format of this.allowedFormats) {
-        keys.push(`${baseKey}/${size}.${format}`);
-      }
-    }
-
-    await s3Service.deleteObjects(keys);
+  async deleteProfilePictures(baseKey) {
+    if (!baseKey) return;
+    await s3Service.deleteFolder(baseKey);
   }
 }
 
