@@ -92,9 +92,17 @@ const playlistSchema = Joi.object({
     'any.required': 'Name is required',
     'string.empty': 'Name cannot be empty',
   }),
+  is_public: Joi.boolean().default(true),
+});
 
-  is_public: Joi.boolean().allow(true, false),
-  cover_image: Joi.object().allow(null),
+const playlistUpdateSchema = Joi.object({
+  name: Joi.string().required().messages({
+    'any.required': 'Name is required',
+    'string.empty': 'Name cannot be empty',
+  }),
+  is_public: Joi.boolean().required().messages({
+    'any.required': 'Visibility status is required',
+  }),
 });
 
 const artistSchema = Joi.object({
@@ -125,5 +133,6 @@ module.exports = {
   trackSchema,
   albumSchema,
   playlistSchema,
+  playlistUpdateSchema,
   artistSchema,
 };

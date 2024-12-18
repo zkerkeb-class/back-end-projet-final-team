@@ -3,11 +3,11 @@ const { playlistService } = require('../services');
 const { authenticate } = require('../middlewares/auth.middleware');
 const {
   createPlaylist,
-  updatePlaylist,
+  updatePlaylistData,
+  updatePlaylistCover,
 } = require('../controllers/playlist.controller');
 const validate = require('../middlewares/validation.middleware');
-const { playlistSchema } = require('./validations/music.validation');
-const parseFormData = require('../middlewares/parseFormData.middleware');
+const { playlistUpdateSchema } = require('./validations/music.validation');
 const upload = require('../config/multer');
 const { validateImageUpload } = require('../middlewares/cdn.middleware');
 
@@ -18,31 +18,7 @@ const { validateImageUpload } = require('../middlewares/cdn.middleware');
  *   description: Playlist management and retrieval operations
  */
 
-//#region
-/**
- * @swagger
- * /playlists:
- *   get:
- *     summary: Get all public playlists
- *     tags: [Playlists]
- *     responses:
- *       200:
- *         description: List of public playlists retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 allOf:
- *                   - $ref: '#/components/schemas/Playlist'
- *                   - type: object
- *                     properties:
- *                       Tracks:
- *                         type: array
- *                         items:
- *                           $ref: '#/components/schemas/Track'
- */
-//#endregion
+// Public routes
 router.get('/', async (req, res, next) => {
   try {
     const playlists = await playlistService.findAll({
@@ -55,31 +31,6 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-//#region
-/**
- * @swagger
- * /playlists/search:
- *   get:
- *     summary: Search public playlists by name
- *     tags: [Playlists]
- *     parameters:
- *       - in: query
- *         name: q
- *         schema:
- *           type: string
- *         required: true
- *         description: Search query string
- *     responses:
- *       200:
- *         description: Search results retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Playlist'
- */
-//#endregion
 router.get('/search', async (req, res, next) => {
   try {
     const playlists = await playlistService.searchPlaylists(req.query.q);
@@ -89,38 +40,6 @@ router.get('/search', async (req, res, next) => {
   }
 });
 
-//#region
-/**
- * @swagger
- * /playlists/{id}:
- *   get:
- *     summary: Get playlist by ID with tracks
- *     tags: [Playlists]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: Playlist ID
- *     responses:
- *       200:
- *         description: Playlist details retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               allOf:
- *                 - $ref: '#/components/schemas/Playlist'
- *                 - type: object
- *                   properties:
- *                     Tracks:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/Track'
- *       404:
- *         description: Playlist not found or not accessible
- */
-//#endregion
 router.get('/:id', async (req, res, next) => {
   try {
     const playlist = await playlistService.getPlaylistWithTracks(req.params.id);
@@ -136,49 +55,33 @@ router.get('/:id', async (req, res, next) => {
 // Protected routes
 router.use(authenticate);
 
-//#region
-/**
- * @swagger
- * /playlists/user:
- *   get:
- *     summary: Get current user's playlists
- *     tags: [Playlists]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: User's playlists retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Playlist'
- *       401:
- *         description: Unauthorized
- */
-//#endregion
 router.get('/user', async (req, res, next) => {
   try {
-    const playlists = await playlistService.findAll({
-      where: { creator_id: req.user.id },
-      include: ['Tracks'],
-    });
+    const playlists = await playlistService.getUserPlaylists(req.user.id);
     res.json(playlists);
   } catch (error) {
     next(error);
   }
 });
 
+router.post('/', createPlaylist);
+
 //#region
 /**
  * @swagger
- * /playlists:
- *   post:
- *     summary: Create a new playlist
+ * /playlists/{id}:
+ *   put:
+ *     summary: Update playlist data (name and visibility)
  *     tags: [Playlists]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Playlist ID
  *     requestBody:
  *       required: true
  *       content:
@@ -196,26 +99,27 @@ router.get('/user', async (req, res, next) => {
  *                 type: boolean
  *                 description: Whether the playlist is public
  *     responses:
- *       201:
- *         description: Playlist created successfully
+ *       200:
+ *         description: Playlist data updated successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Playlist'
- *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
  */
 //#endregion
-router.post('/', createPlaylist);
+router.put(
+  '/:id',
+  authenticate,
+  validate(playlistUpdateSchema),
+  updatePlaylistData,
+);
 
 //#region
 /**
  * @swagger
- * /playlists/{id}:
+ * /playlists/{id}/cover:
  *   put:
- *     summary: Update a playlist
+ *     summary: Update playlist cover image
  *     tags: [Playlists]
  *     security:
  *       - bearerAuth: []
@@ -229,62 +133,33 @@ router.post('/', createPlaylist);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
- *             $ref: '#/components/schemas/Playlist'
+ *             type: object
+ *             required:
+ *               - cover_image
+ *             properties:
+ *               cover_image:
+ *                 type: string
+ *                 format: binary
+ *                 description: The cover image file
  *     responses:
  *       200:
- *         description: Playlist updated successfully
+ *         description: Playlist cover updated successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Playlist'
- *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden - Can only update own playlists
- *       404:
- *         description: Playlist not found
  */
 //#endregion
 router.put(
-  '/:id',
+  '/:id/cover',
+  authenticate,
   upload.single('cover_image'),
-  parseFormData,
-  validate(playlistSchema),
   validateImageUpload,
-  updatePlaylist,
+  updatePlaylistCover,
 );
 
-//#region
-/**
- * @swagger
- * /playlists/{id}:
- *   delete:
- *     summary: Delete a playlist
- *     tags: [Playlists]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: Playlist ID
- *     responses:
- *       204:
- *         description: Playlist deleted successfully
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden - Can only delete own playlists
- *       404:
- *         description: Playlist not found
- */
-//#endregion
 router.delete('/:id', async (req, res, next) => {
   try {
     const playlist = await playlistService.findById(req.params.id);
@@ -302,51 +177,6 @@ router.delete('/:id', async (req, res, next) => {
   }
 });
 
-//#region
-/**
- * @swagger
- * /playlists/{id}/tracks:
- *   post:
- *     summary: Add tracks to a playlist
- *     tags: [Playlists]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: Playlist ID
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - track_ids
- *             properties:
- *               track_ids:
- *                 type: array
- *                 items:
- *                   type: integer
- *                 description: Array of track IDs to add
- *     responses:
- *       200:
- *         description: Tracks added to playlist successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Playlist'
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden - Can only modify own playlists
- *       404:
- *         description: Playlist not found
- */
-//#endregion
 router.post('/:id/tracks', async (req, res, next) => {
   try {
     const playlist = await playlistService.findById(req.params.id);
@@ -357,9 +187,9 @@ router.post('/:id/tracks', async (req, res, next) => {
         .json({ message: 'You can only modify your own playlists' });
     }
 
-    const updatedPlaylist = await playlistService.addTracks(
+    const updatedPlaylist = await playlistService.addTrack(
       req.params.id,
-      req.body.track_ids,
+      req.body.track_id,
     );
     res.json(updatedPlaylist);
   } catch (error) {
@@ -367,39 +197,6 @@ router.post('/:id/tracks', async (req, res, next) => {
   }
 });
 
-//#region
-/**
- * @swagger
- * /playlists/{id}/tracks/{trackId}:
- *   delete:
- *     summary: Remove a track from a playlist
- *     tags: [Playlists]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: Playlist ID
- *       - in: path
- *         name: trackId
- *         schema:
- *           type: integer
- *         required: true
- *         description: Track ID to remove
- *     responses:
- *       204:
- *         description: Track removed from playlist successfully
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden - Can only modify own playlists
- *       404:
- *         description: Playlist or track not found
- */
-//#endregion
 router.delete('/:id/tracks/:trackId', async (req, res, next) => {
   try {
     const playlist = await playlistService.findById(req.params.id);

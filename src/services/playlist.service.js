@@ -8,32 +8,55 @@ class PlaylistService extends BaseService {
     super(Playlist);
   }
 
-  async createPlaylist(userId, playlistData) {
+  async createPlaylist(userId) {
     try {
+      const numPlaylists = await Playlist.count({
+        where: { creator_id: userId },
+      });
       return await this.create({
-        ...playlistData,
         creator_id: userId,
+        name: `My playlist ${numPlaylists + 1}`,
+        is_public: true,
       });
     } catch (error) {
       throw new Error(`Error creating playlist: ${error.message}`);
     }
   }
 
-  async updatePlaylist(playlistId, playlistData) {
+  async updatePlaylistData(playlistId, playlistData) {
+    if (!playlistId) {
+      throw new Error('Playlist ID is required');
+    }
     try {
-      let coverImage = null;
-      if (playlistData.cover_image) {
-        coverImage = await cdnService.processPlaylistPicture(
-          playlistData.cover_image,
-        );
+      return await this.update(playlistId, {
+        name: playlistData.name,
+        is_public: playlistData.is_public,
+      });
+    } catch (error) {
+      throw new Error(`Error updating playlist data: ${error.message}`);
+    }
+  }
+
+  async updatePlaylistCover(playlistId, imageBuffer) {
+    if (!playlistId) {
+      throw new Error('Playlist ID is required');
+    }
+    try {
+      const playlist = await this.findById(playlistId);
+
+      // Delete old cover image if exists
+      if (playlist.cover_image?.baseKey) {
+        await cdnService.deleteProfilePicture(playlist.cover_image.baseKey);
       }
 
+      // Process and upload new cover image
+      const coverImage = await cdnService.processPlaylistPicture(imageBuffer);
+
       return await this.update(playlistId, {
-        ...playlistData,
         cover_images: coverImage,
       });
     } catch (error) {
-      throw new Error(`Error updating playlist: ${error.message}`);
+      throw new Error(`Error updating playlist cover: ${error.message}`);
     }
   }
 
