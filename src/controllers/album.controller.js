@@ -1,15 +1,26 @@
 const { Album } = require('../models');
+const { albumService } = require('../services');
 
-const createAlbum = async (req, res, _next) => {
+const createAlbum = async (req, res, next) => {
   try {
-    const { album: albumData } = req.body;
-    const album = await Album.create(albumData);
-    return res.status(201).send({
-      message: 'Album created successfully',
-      album,
-    });
+    if (
+      req.user.artist_id !== req.body.primary_artist_id &&
+      req.user.user_type !== 'admin'
+    ) {
+      return res
+        .status(403)
+        .json({ message: 'You can only create albums for yourself' });
+    }
+
+    const albumData = {
+      ...req.body,
+      cover_art_url: req.file?.buffer,
+    };
+
+    const album = await albumService.createAlbum(albumData);
+    res.status(201).json(album);
   } catch (error) {
-    return res.status(500).send({ error: error.message });
+    next(error);
   }
 };
 

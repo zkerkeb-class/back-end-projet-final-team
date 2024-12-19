@@ -1,5 +1,6 @@
 const { GENRE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
+const isValidImageFormat = require('../utils/isValideImageFormat');
 
 class Album extends Model {}
 
@@ -32,7 +33,11 @@ Album.init(
       defaultValue: 0,
     },
     cover_art_url: {
-      type: DataTypes.TEXT,
+      type: DataTypes.JSONB,
+      defaultValue: null,
+      validate: {
+        isValidImageFormat,
+      },
     },
     total_duration_seconds: {
       type: DataTypes.INTEGER,

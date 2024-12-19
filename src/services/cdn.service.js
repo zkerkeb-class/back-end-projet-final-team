@@ -70,6 +70,10 @@ class CdnService {
     return this.processImage(buffer, 'playlist-pictures');
   }
 
+  async processAlbumCover(buffer) {
+    return this.processImage(buffer, 'album-covers');
+  }
+
   async deleteProfilePictures(baseKey) {
     if (!baseKey) return;
     await s3Service.deleteFolder(baseKey);

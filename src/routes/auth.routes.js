@@ -24,6 +24,7 @@ const {
  *   description: User authentication and authorization
  */
 
+//#region
 /**
  * @swagger
  * /auth/register:
@@ -53,6 +54,7 @@ const {
  *             schema:
  *               $ref: '#/components/schemas/User'
  */
+//#endregion
 router.post(
   '/register',
   upload.single('profile_picture'),
@@ -62,6 +64,7 @@ router.post(
   registerUser,
 );
 
+//#region
 /**
  * @swagger
  * /auth/profile-picture:
@@ -90,6 +93,7 @@ router.post(
  *             schema:
  *               $ref: '#/components/schemas/User'
  */
+//#endregion
 router.put(
   '/profile-picture',
   authenticate,
@@ -98,6 +102,7 @@ router.put(
   updateProfilePicture,
 );
 
+//#region
 /**
  * @swagger
  * /auth/login:
@@ -135,8 +140,10 @@ router.put(
  *                 refreshToken:
  *                   type: string
  */
+//#endregion
 router.post('/login', validate(loginSchema), loginUser);
 
+//#region
 /**
  * @swagger
  * /auth/refresh-token:
@@ -171,8 +178,10 @@ router.post('/login', validate(loginSchema), loginUser);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
+//#endregion
 router.post('/refresh-token', validate(refreshTokenSchema), refreshToken);
 
+//#region
 /**
  * @swagger
  * /auth/logout:
@@ -198,6 +207,7 @@ router.post('/refresh-token', validate(refreshTokenSchema), refreshToken);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
+//#endregion
 router.post('/logout', authenticate, logoutUser);
 
 module.exports = router;

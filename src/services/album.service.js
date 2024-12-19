@@ -1,16 +1,23 @@
 const BaseService = require('./base.service');
 const { Album, Artist, Track, AlbumArtist } = require('../models');
 const { Op } = require('sequelize');
+const cdnService = require('./cdn.service');
 
 class AlbumService extends BaseService {
   constructor() {
     super(Album);
   }
 
-  async createAlbum(albumData, artistIds) {
+  async createAlbum(albumData) {
     try {
+      if (albumData.cover_art_url) {
+        albumData.cover_art_url = await cdnService.processAlbumCover(
+          albumData.cover_art_url,
+        );
+      }
       const album = await this.create(albumData);
 
+      const artistIds = albumData.artist_ids;
       if (artistIds && artistIds.length > 0) {
         await Promise.all(
           artistIds.map((artistId) =>

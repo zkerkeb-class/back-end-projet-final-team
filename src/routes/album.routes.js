@@ -3,6 +3,10 @@ const { albumService } = require('../services');
 const { authenticate, isArtist } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
 const { albumSchema } = require('./validations/music.validation');
+const { createAlbum } = require('../controllers/album.controller');
+const upload = require('../config/multer');
+const parseFormData = require('../middlewares/parseFormData.middleware');
+const { validateImageUpload } = require('../middlewares/cdn.middleware');
 
 /**
  * @swagger
@@ -250,23 +254,15 @@ router.use(authenticate);
  *         description: Forbidden - Can only create albums for yourself
  */
 //#endregion
-router.post('/', isArtist, validate(albumSchema), async (req, res, next) => {
-  try {
-    if (
-      req.user.artist_id !== req.body.primary_artist_id &&
-      req.user.user_type !== 'admin'
-    ) {
-      return res
-        .status(403)
-        .json({ message: 'You can only create albums for yourself' });
-    }
-
-    const album = await albumService.createAlbum(req.body, req.body.artist_ids);
-    res.status(201).json(album);
-  } catch (error) {
-    next(error);
-  }
-});
+router.post(
+  '/',
+  isArtist,
+  upload.single('cover_art_url'),
+  parseFormData,
+  validate(albumSchema),
+  validateImageUpload,
+  createAlbum,
+);
 
 //#region
 /**
