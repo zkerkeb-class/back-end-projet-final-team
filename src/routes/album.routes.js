@@ -11,6 +11,7 @@ const { albumSchema } = require('./validations/music.validation');
  *   description: Album management and retrieval operations
  */
 
+//#region
 /**
  * @swagger
  * /albums:
@@ -36,6 +37,7 @@ const { albumSchema } = require('./validations/music.validation');
  *                         items:
  *                           $ref: '#/components/schemas/Track'
  */
+//#endregion
 router.get('/', async (req, res, next) => {
   try {
     const albums = await albumService.findAll({
@@ -47,6 +49,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /albums/search:
@@ -70,6 +73,7 @@ router.get('/', async (req, res, next) => {
  *               items:
  *                 $ref: '#/components/schemas/Album'
  */
+//#endregion
 router.get('/search', async (req, res, next) => {
   try {
     const albums = await albumService.searchAlbums(req.query.q);
@@ -79,6 +83,7 @@ router.get('/search', async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /albums/genre/{genre}:
@@ -102,6 +107,7 @@ router.get('/search', async (req, res, next) => {
  *               items:
  *                 $ref: '#/components/schemas/Album'
  */
+//#endregion
 router.get('/genre/:genre', async (req, res, next) => {
   try {
     const albums = await albumService.findByGenre(req.params.genre);
@@ -111,6 +117,7 @@ router.get('/genre/:genre', async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /albums/artist/{artistId}:
@@ -134,6 +141,7 @@ router.get('/genre/:genre', async (req, res, next) => {
  *               items:
  *                 $ref: '#/components/schemas/Album'
  */
+//#endregion
 router.get('/artist/:artistId', async (req, res, next) => {
   try {
     const albums = await albumService.getArtistAlbums(req.params.artistId);
@@ -143,6 +151,7 @@ router.get('/artist/:artistId', async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /albums/{id}:
@@ -175,6 +184,7 @@ router.get('/artist/:artistId', async (req, res, next) => {
  *       404:
  *         description: Album not found
  */
+//#endregion
 router.get('/:id', async (req, res, next) => {
   try {
     const album = await albumService.getAlbumWithDetails(req.params.id);
@@ -187,6 +197,7 @@ router.get('/:id', async (req, res, next) => {
 // Protected routes
 router.use(authenticate);
 
+//#region
 /**
  * @swagger
  * /albums:
@@ -238,6 +249,7 @@ router.use(authenticate);
  *       403:
  *         description: Forbidden - Can only create albums for yourself
  */
+//#endregion
 router.post('/', isArtist, validate(albumSchema), async (req, res, next) => {
   try {
     if (
@@ -256,6 +268,7 @@ router.post('/', isArtist, validate(albumSchema), async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /albums/{id}:
@@ -293,6 +306,7 @@ router.post('/', isArtist, validate(albumSchema), async (req, res, next) => {
  *       404:
  *         description: Album not found
  */
+//#endregion
 router.put('/:id', isArtist, validate(albumSchema), async (req, res, next) => {
   try {
     const album = await albumService.findById(req.params.id);
@@ -313,6 +327,7 @@ router.put('/:id', isArtist, validate(albumSchema), async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /albums/{id}:
@@ -338,6 +353,7 @@ router.put('/:id', isArtist, validate(albumSchema), async (req, res, next) => {
  *       404:
  *         description: Album not found
  */
+//#endregion
 router.delete('/:id', isArtist, async (req, res, next) => {
   try {
     const album = await albumService.findById(req.params.id);
@@ -358,6 +374,7 @@ router.delete('/:id', isArtist, async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /albums/{id}/update-stats:
@@ -387,6 +404,7 @@ router.delete('/:id', isArtist, async (req, res, next) => {
  *       404:
  *         description: Album not found
  */
+//#endregion
 router.post('/:id/update-stats', isArtist, async (req, res, next) => {
   try {
     const album = await albumService.findById(req.params.id);
