@@ -10,6 +10,7 @@ const {
   createAlbum,
   updateAlbum,
   updateAlbumCoverArt,
+  deleteAlbum,
 } = require('../controllers/album.controller');
 const upload = require('../config/multer');
 const parseFormData = require('../middlewares/parseFormData.middleware');
@@ -347,25 +348,7 @@ router.put(
  *         description: Album not found
  */
 //#endregion
-router.delete('/:id', isArtist, async (req, res, next) => {
-  try {
-    const album = await albumService.findById(req.params.id);
-
-    if (
-      album.primary_artist_id !== req.user.artist_id &&
-      req.user.user_type !== 'admin'
-    ) {
-      return res
-        .status(403)
-        .json({ message: 'You can only delete your own albums' });
-    }
-
-    await albumService.delete(req.params.id);
-    res.status(204).end();
-  } catch (error) {
-    next(error);
-  }
-});
+router.delete('/:id', isArtist, deleteAlbum);
 
 //#region
 /**

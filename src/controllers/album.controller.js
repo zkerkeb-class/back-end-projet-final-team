@@ -89,20 +89,23 @@ const updateAlbumCoverArt = async (req, res, next) => {
   }
 };
 
-const deleteAlbum = async (req, res, _next) => {
+const deleteAlbum = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const album = await Album.findByPk(id);
+    const album = await albumService.findById(req.params.id);
 
-    if (!album) {
-      return res.status(404).send({ message: 'Album not found' });
+    if (
+      album.primary_artist_id !== req.user.artist_id &&
+      req.user.user_type !== 'admin'
+    ) {
+      return res
+        .status(403)
+        .json({ message: 'You can only delete your own albums' });
     }
 
-    await album.destroy();
-
-    res.status(204).send();
+    await albumService.deleteAlbum(req.params.id, album.cover_art_url?.baseKey);
+    res.status(204).end();
   } catch (error) {
-    res.status(500).send({ error: error.message });
+    next(error);
   }
 };
 

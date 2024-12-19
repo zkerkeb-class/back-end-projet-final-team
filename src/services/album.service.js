@@ -144,6 +144,17 @@ class AlbumService extends BaseService {
       throw new Error(`Error updating album cover: ${error.message}`);
     }
   }
+
+  async deleteAlbum(albumId, baseKey) {
+    try {
+      if (baseKey) {
+        await cdnService.deleteProfilePictures(baseKey);
+      }
+      return await this.delete(albumId);
+    } catch (error) {
+      throw new Error(`Error deleting album: ${error.message}`);
+    }
+  }
 }
 
 module.exports = new AlbumService();
