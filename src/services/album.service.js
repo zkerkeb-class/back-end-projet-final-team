@@ -131,6 +131,19 @@ class AlbumService extends BaseService {
       throw new Error(`Error updating album stats: ${error.message}`);
     }
   }
+
+  async updateAlbumCover(album, coverArt) {
+    try {
+      if (album.cover_art_url?.baseKey) {
+        await cdnService.deleteProfilePictures(album.cover_art_url.baseKey);
+      }
+
+      const newCoverArt = await cdnService.processAlbumCover(coverArt);
+      return await this.update(album.id, { cover_art_url: newCoverArt });
+    } catch (error) {
+      throw new Error(`Error updating album cover: ${error.message}`);
+    }
+  }
 }
 
 module.exports = new AlbumService();

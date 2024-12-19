@@ -87,6 +87,21 @@ const albumSchema = Joi.object({
   popularity_score: Joi.number().min(0).max(100).default(0),
 });
 
+const albumPlaylistSchema = Joi.object({
+  title: Joi.string().allow('', null),
+  release_date: Joi.date().iso().allow('', null),
+  genre: Joi.string()
+    .valid(...Object.values(GENRE))
+    .allow('', null),
+  primary_artist_id: Joi.number().integer().positive().allow('', null),
+  artist_ids: Joi.array()
+    .items(Joi.number().integer().positive())
+    .unique()
+    .min(1)
+    .allow('', null),
+  cover_art_url: Joi.string().uri().allow('', null),
+});
+
 const playlistSchema = Joi.object({
   name: Joi.string().required().messages({
     'any.required': 'Name is required',
@@ -132,6 +147,7 @@ const artistSchema = Joi.object({
 module.exports = {
   trackSchema,
   albumSchema,
+  albumPlaylistSchema,
   playlistSchema,
   playlistUpdateSchema,
   artistSchema,

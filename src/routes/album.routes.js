@@ -2,8 +2,15 @@ const router = require('express').Router();
 const { albumService } = require('../services');
 const { authenticate, isArtist } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
-const { albumSchema } = require('./validations/music.validation');
-const { createAlbum } = require('../controllers/album.controller');
+const {
+  albumSchema,
+  albumPlaylistSchema,
+} = require('./validations/music.validation');
+const {
+  createAlbum,
+  updateAlbum,
+  updateAlbumCoverArt,
+} = require('../controllers/album.controller');
 const upload = require('../config/multer');
 const parseFormData = require('../middlewares/parseFormData.middleware');
 const { validateImageUpload } = require('../middlewares/cdn.middleware');
@@ -303,25 +310,15 @@ router.post(
  *         description: Album not found
  */
 //#endregion
-router.put('/:id', isArtist, validate(albumSchema), async (req, res, next) => {
-  try {
-    const album = await albumService.findById(req.params.id);
+router.put('/:id', isArtist, validate(albumPlaylistSchema), updateAlbum);
 
-    if (
-      album.primary_artist_id !== req.user.artist_id &&
-      req.user.user_type !== 'admin'
-    ) {
-      return res
-        .status(403)
-        .json({ message: 'You can only update your own albums' });
-    }
-
-    const updatedAlbum = await albumService.update(req.params.id, req.body);
-    res.json(updatedAlbum);
-  } catch (error) {
-    next(error);
-  }
-});
+router.put(
+  '/:id/cover',
+  isArtist,
+  upload.single('cover_art_url'),
+  validateImageUpload,
+  updateAlbumCoverArt,
+);
 
 //#region
 /**

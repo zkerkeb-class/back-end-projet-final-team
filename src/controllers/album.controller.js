@@ -49,26 +49,43 @@ const getAlbumById = async (req, res, _next) => {
   }
 };
 
-const updateAlbum = async (req, res, _next) => {
+const updateAlbum = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const [updatedRowsCount] = await Album.update(req.body, {
-      where: { id: id },
-    });
-    if (updatedRowsCount === 0) {
-      return res.status(404).send({ message: 'Album not found' });
+    const album = await albumService.findById(req.params.id);
+
+    if (
+      album.primary_artist_id !== req.user.artist_id &&
+      req.user.user_type !== 'admin'
+    ) {
+      return res
+        .status(403)
+        .json({ message: 'You can only update your own albums' });
     }
 
-    const updatedAlbum = await Album.findByPk(id, {
-      attributes: { exclude: ['deletedAt', 'updatedAt'] },
-    });
-
-    return res.status(200).send({
-      message: 'Album updated successfully',
-      album: updatedAlbum,
-    });
+    const updatedAlbum = await albumService.update(req.params.id, req.body);
+    res.json(updatedAlbum);
   } catch (error) {
-    return res.status(500).send({ error: error.message });
+    next(error);
+  }
+};
+
+const updateAlbumCoverArt = async (req, res, next) => {
+  try {
+    const album = await albumService.findById(req.params.id);
+
+    if (album.primary_artist_id !== req.user.artist_id) {
+      return res
+        .status(403)
+        .json({ message: 'You can only update your own albums' });
+    }
+
+    const updatedAlbum = await albumService.updateAlbumCover(
+      album,
+      req.file.buffer,
+    );
+    res.json(updatedAlbum);
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -94,5 +111,6 @@ module.exports = {
   getAlbums,
   getAlbumById,
   updateAlbum,
+  updateAlbumCoverArt,
   deleteAlbum,
 };
