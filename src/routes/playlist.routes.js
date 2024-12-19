@@ -5,6 +5,7 @@ const {
   createPlaylist,
   updatePlaylistData,
   updatePlaylistCover,
+  deletePlaylist,
 } = require('../controllers/playlist.controller');
 const validate = require('../middlewares/validation.middleware');
 const { playlistUpdateSchema } = require('./validations/music.validation');
@@ -160,25 +161,7 @@ router.put(
   updatePlaylistCover,
 );
 
-router.delete('/:id', async (req, res, next) => {
-  try {
-    const playlist = await playlistService.findById(req.params.id);
-
-    if (playlist.creator_id !== req.user.id) {
-      return res
-        .status(403)
-        .json({ message: 'You can only delete your own playlists' });
-    }
-
-    await playlistService.deletePlaylist(
-      req.params.id,
-      playlist.cover_images?.baseKey,
-    );
-    res.status(204).end();
-  } catch (error) {
-    next(error);
-  }
-});
+router.delete('/:id', deletePlaylist);
 
 router.post('/:id/tracks', async (req, res, next) => {
   try {
