@@ -19,7 +19,20 @@ const { validateImageUpload } = require('../middlewares/cdn.middleware');
  *   description: Playlist management and retrieval operations
  */
 
-// Public routes
+//#region
+/**
+ * @swagger
+ * /playlists:
+ *   get:
+ *     summary: Get all public playlists
+ *     tags: [Playlists]
+ *     responses:
+ *       200:
+ *         description: Playlists retrieved successfully
+ *       404:
+ *         description: No public playlists found
+ */
+//#endregion
 router.get('/', async (req, res, next) => {
   try {
     const playlists = await playlistService.findAll({
@@ -32,6 +45,26 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+//#region
+/**
+ * @swagger
+ * /playlists/search:
+ *   get:
+ *     summary: Search playlists
+ *     tags: [Playlists]
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Search query
+ *     responses:
+ *       200:
+ *         description: Playlists retrieved successfully
+ *       400:
+ *         description: Invalid search query
+ */
+//#endregion
 router.get('/search', async (req, res, next) => {
   try {
     const playlists = await playlistService.searchPlaylists(req.query.q);
@@ -41,6 +74,27 @@ router.get('/search', async (req, res, next) => {
   }
 });
 
+//#region
+/**
+ * @swagger
+ * /playlists/{id}:
+ *   get:
+ *     summary: Get a playlist by ID
+ *     tags: [Playlists]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Playlist ID
+ *     responses:
+ *       200:
+ *         description: Playlist retrieved successfully
+ *       404:
+ *         description: Playlist not found
+ */
+//#endregion
 router.get('/:id', async (req, res, next) => {
   try {
     const playlist = await playlistService.getPlaylistWithTracks(req.params.id);
@@ -56,6 +110,20 @@ router.get('/:id', async (req, res, next) => {
 // Protected routes
 router.use(authenticate);
 
+//#region
+/**
+ * @swagger
+ * /playlists/user:
+ *   get:
+ *     summary: Get user's playlists
+ *     tags: [Playlists]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User's playlists retrieved successfully
+ */
+//#endregion
 router.get('/user', async (req, res, next) => {
   try {
     const playlists = await playlistService.getUserPlaylists(req.user.id);
@@ -161,8 +229,44 @@ router.put(
   updatePlaylistCover,
 );
 
+//#region
+/**
+ * @swagger
+ * /playlists/{id}:
+ *   delete:
+ *     summary: Delete a playlist
+ *     tags: [Playlists]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Playlist ID
+ */
+//#endregion
 router.delete('/:id', deletePlaylist);
 
+//#region
+/**
+ * @swagger
+ * /playlists/{id}/tracks:
+ *   post:
+ *     summary: Add a track to a playlist
+ *     tags: [Playlists]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Playlist ID
+ */
+//#endregion
 router.post('/:id/tracks', async (req, res, next) => {
   try {
     const playlist = await playlistService.findById(req.params.id);

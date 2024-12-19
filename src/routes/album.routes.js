@@ -313,6 +313,33 @@ router.post(
 //#endregion
 router.put('/:id', isArtist, validate(albumPlaylistSchema), updateAlbum);
 
+//#region
+/**
+ * @swagger
+ * /albums/{id}/cover:
+ *   put:
+ *     summary: Update an album's cover art
+ *     tags: [Albums]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Album ID
+ *     responses:
+ *       200:
+ *         description: Album cover art updated successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Can only update own albums
+ *       404:
+ *         description: Album not found
+ */
+//#endregion
 router.put(
   '/:id/cover',
   isArtist,

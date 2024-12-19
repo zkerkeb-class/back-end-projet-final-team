@@ -8,7 +8,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('../docs/swagger');
 const {
   serveImages,
-  negotiateImageFormat,
+  // negotiateImageFormat,
 } = require('../middlewares/cdn.middleware');
 const path = require('path');
 const {
@@ -43,7 +43,7 @@ app.use(express.json());
 app.use(createMorganMiddleware(env));
 app.use(limiter);
 app.use('/api/v1', apiRouter);
-app.use(negotiateImageFormat);
+// app.use(negotiateImageFormat);
 app.use('/storage', serveImages(path.join(__dirname, '../../storage')));
 
 app.use((req, _res, next) => {
