@@ -13,6 +13,7 @@ const {
   PlaylistTrack,
 } = require('../models');
 const { GENRE, USER_TYPE } = require('../models/enums');
+const initDefaultImages = require('./initDefaultImages');
 
 const TOTAL_USERS = 10;
 const TOTAL_ARTISTS = 5;
@@ -22,6 +23,10 @@ const PLAYLISTS_PER_USER = 2;
 
 async function seedDatabase() {
   try {
+    logger.log('Initializing default images...');
+    const defaultUrls = await initDefaultImages();
+    logger.log('Default images initialized:', defaultUrls);
+
     logger.log('Starting database seeding...');
 
     // Create roles
@@ -72,7 +77,7 @@ async function seedDatabase() {
             user_type: USER_TYPE.STANDARD,
             first_name: faker.person.firstName(),
             last_name: faker.person.lastName(),
-            profile_picture_url: faker.image.avatar(),
+            profile_picture: defaultUrls.profile,
             is_verified: true,
             is_active: true,
           });
@@ -97,7 +102,6 @@ async function seedDatabase() {
             bio: faker.lorem.paragraph(),
             genre: faker.helpers.arrayElement(Object.values(GENRE)),
             country: faker.location.country(),
-            image_url: faker.image.avatar(),
             phonetic_name: faker.person.fullName(),
             total_listeners: faker.number.int({ min: 1000, max: 1000000 }),
           });
@@ -110,7 +114,7 @@ async function seedDatabase() {
             user_type: USER_TYPE.ARTIST,
             first_name: faker.person.firstName(),
             last_name: faker.person.lastName(),
-            profile_picture_url: faker.image.avatar(),
+            profile_picture: defaultUrls.profile,
             artist_id: artist.id,
             is_verified: true,
             is_active: true,
@@ -137,9 +141,9 @@ async function seedDatabase() {
               release_date: faker.date.past(),
               genre: artist.genre,
               primary_artist_id: artist.id,
-              cover_art_url: faker.image.urlPicsumPhotos(),
               total_tracks: TRACKS_PER_ALBUM,
               popularity_score: faker.number.float({ min: 0, max: 100 }),
+              cover_art_url: defaultUrls.album,
             });
 
             await AlbumArtist.create({
@@ -189,6 +193,7 @@ async function seedDatabase() {
               creator_id: user.id,
               is_public: faker.datatype.boolean(),
               total_tracks: faker.number.int({ min: 5, max: 15 }),
+              cover_images: defaultUrls.playslit,
             });
 
             // Add random tracks to playlist
@@ -203,6 +208,7 @@ async function seedDatabase() {
                   track_id: track.id,
                   track_order: index + 1,
                   added_at: faker.date.recent(),
+                  cover_images: defaultUrls.playslit,
                 }),
               ),
             );
