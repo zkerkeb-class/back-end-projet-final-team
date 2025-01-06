@@ -12,7 +12,7 @@ const {
   updateAlbumCoverArt,
   deleteAlbum,
 } = require('../controllers/album.controller');
-const upload = require('../config/multer');
+const { uploadImage } = require('../config/multer');
 const parseFormData = require('../middlewares/parseFormData.middleware');
 const { validateImageUpload } = require('../middlewares/cdn.middleware');
 
@@ -265,7 +265,7 @@ router.use(authenticate);
 router.post(
   '/',
   isArtist,
-  upload.single('cover_art_url'),
+  uploadImage.single('cover_art_url'),
   parseFormData,
   validate(albumSchema),
   validateImageUpload,
@@ -343,7 +343,7 @@ router.put('/:id', isArtist, validate(albumPlaylistSchema), updateAlbum);
 router.put(
   '/:id/cover',
   isArtist,
-  upload.single('cover_art_url'),
+  uploadImage.single('cover_art_url'),
   validateImageUpload,
   updateAlbumCoverArt,
 );

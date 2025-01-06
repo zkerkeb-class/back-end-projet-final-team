@@ -1,7 +1,6 @@
 const sharp = require('sharp');
 const s3Service = require('./s3.service');
 const createUniqueId = require('../utils/createUniqueId');
-
 class CdnService {
   constructor() {
     this.allowedFormats = ['webp', 'jpeg', 'png'];
@@ -74,10 +73,16 @@ class CdnService {
     return this.processImage(buffer, 'album-covers');
   }
 
+  async processTrackCover(buffer) {
+    return this.processImage(buffer, 'track-covers');
+  }
+
   async deleteProfilePictures(baseKey) {
     if (!baseKey) return;
     await s3Service.deleteFolder(baseKey);
   }
+
+  // async processAudioTrack(buffer, baseKey) {}
 }
 
 module.exports = new CdnService();

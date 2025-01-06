@@ -25,6 +25,8 @@ const serveImages = (storageBasePath) => {
           res.setHeader('Content-Type', 'image/avif');
           break;
         case '.jpg':
+          res.setHeader('Content-Type', 'image/jpg');
+          break;
         case '.jpeg':
           res.setHeader('Content-Type', 'image/jpeg');
           break;
@@ -58,7 +60,7 @@ const validateImageUpload = (req, res, next) => {
     next();
   }
 
-  const file = req.file || req.files[0];
+  const file = req.file || req.files[0] || req.files.cover[0];
   const allowedMimeTypes = [
     'image/jpeg',
     'image/png',

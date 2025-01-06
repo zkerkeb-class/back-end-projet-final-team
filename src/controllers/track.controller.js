@@ -1,94 +1,99 @@
-const { Track, Artist } = require('../models');
+const { trackService } = require('../services');
+const cdnService = require('../services/cdn.service');
+const audioService = require('../services/audio.service');
+const path = require('path');
+const logger = require('../utils/loggerUtil');
 
-const createTrack = async (req, res, _next) => {
+const createTrack = async (req, res, next) => {
   try {
-    const trackData = req.body;
+    // Validate required files
+    if (!req.files?.audio) {
+      return res.status(400).json({ message: 'Audio file is required' });
+    }
 
-    const artist = await Artist.findOne({
-      userId: req.user.id,
-    });
+    const audioFile = req.files.audio[0];
+    const coverFile = req.files.cover?.[0];
 
-    const track = await Track.create({
-      ...trackData,
-      artistId: artist.id || null,
-      durationSecondes: 0,
-      audioFiles: {
-        url: 'https://www.example.com/audio.mp3',
-        format: 'mp3',
-      },
-    });
-    return res.status(201).send({
-      message: 'Track created successfully',
-      track,
-    });
-  } catch (error) {
-    return res.status(500).send({ error: error.message });
-  }
-};
+    // Process audio file
+    const audioFormat = path
+      .extname(audioFile.originalname)
+      .slice(1)
+      .toLowerCase();
+    if (!['mp3', 'wav', 'm4a'].includes(audioFormat)) {
+      return res.status(400).json({
+        message: 'Invalid audio format. Supported formats: mp3, wav, m4a',
+      });
+    }
 
-const getTracks = async (req, res, _next) => {
-  try {
-    const tracks = await Track.findAll(
-      { attributes: { exclude: ['deletedAt', 'updatedAt'] } },
-      { limit: 20 },
+    logger.info('Processing audio file...');
+    const audioResult = await audioService.processAudio(
+      audioFile.buffer,
+      audioFormat,
     );
-    return res.status(200).send(tracks);
+
+    // Process cover image if provided
+    let coverResult = null;
+    if (coverFile) {
+      logger.info('Processing cover image...');
+      coverResult = await cdnService.processTrackCover(coverFile.buffer);
+    }
+
+    // Create track record
+    const trackData = {
+      ...req.body,
+      artist_id: req.user.artist_id,
+      audio_formats: Object.keys(audioResult.formats),
+      audio_base_key: audioResult.baseKey,
+      cover_image: coverResult,
+      file_formats: audioResult.formats,
+    };
+
+    const track = await trackService.create(trackData);
+
+    res.status(201).json(track);
   } catch (error) {
-    return res.status(500).send({ error: error.message });
+    // Clean up files if track creation fails
+    if (error.audioBaseKey) {
+      await audioService.deleteAudio(error.audioBaseKey).catch(logger.error);
+    }
+    if (error.coverBaseKey) {
+      await cdnService
+        .deleteProfilePictures(error.coverBaseKey)
+        .catch(logger.error);
+    }
+    next(error);
   }
 };
 
-const getTrackById = async (req, res, _next) => {
+const deleteTrack = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const track = await Track.findByPk(id);
-    if (!track) {
-      return res.status(404).send({ message: 'Track not found' });
-    }
-    return res.status(200).send(track);
-  } catch (error) {
-    return res.status(500).send({ error: error.message });
-  }
-};
+    const track = await trackService.findById(req.params.id);
 
-const updateTrack = async (req, res, _next) => {
-  try {
-    const track = req.resource;
-    if (!track) {
-      return res.status(404).send({ message: 'Track not found' });
-    }
-    track.update(req.body);
-
-    return res.status(200).send({
-      message: 'Track updated successfully',
-      track: track,
-    });
-  } catch (error) {
-    return res.status(500).send({ error: error.message });
-  }
-};
-
-const deleteTrack = async (req, res, _next) => {
-  try {
-    const { id } = req.params;
-    const track = await Track.findByPk(id);
-
-    if (!track) {
-      return res.status(404).send({ message: 'Track not found' });
+    if (
+      track.artist_id !== req.user.artist_id &&
+      req.user.user_type !== 'admin'
+    ) {
+      return res
+        .status(403)
+        .json({ message: 'You can only delete your own tracks' });
     }
 
-    await track.destroy();
+    // Delete audio files and cover image
+    if (track.audio_base_key) {
+      await audioService.deleteAudio(track.audio_base_key);
+    }
+    if (track.cover_image?.baseKey) {
+      await cdnService.deleteProfilePictures(track.cover_image.baseKey);
+    }
 
-    return res.status(204).send({ message: 'Track deleted successfully' });
+    await trackService.delete(track.id);
+    res.status(204).end();
   } catch (error) {
-    return res.status(500).send({ error: error.message });
+    next(error);
   }
 };
 
 module.exports = {
   createTrack,
-  getTracks,
-  getTrackById,
-  updateTrack,
   deleteTrack,
 };

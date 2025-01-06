@@ -9,7 +9,7 @@ const {
 } = require('../controllers/playlist.controller');
 const validate = require('../middlewares/validation.middleware');
 const { playlistUpdateSchema } = require('./validations/music.validation');
-const upload = require('../config/multer');
+const { uploadImage } = require('../config/multer');
 const { validateImageUpload } = require('../middlewares/cdn.middleware');
 
 /**
@@ -224,7 +224,7 @@ router.put(
 router.put(
   '/:id/cover',
   authenticate,
-  upload.single('cover_image'),
+  uploadImage.single('cover_image'),
   validateImageUpload,
   updatePlaylistCover,
 );

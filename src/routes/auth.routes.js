@@ -8,7 +8,7 @@ const {
 } = require('../controllers/auth.controller');
 const { authenticate } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
-const upload = require('../config/multer');
+const { uploadImage } = require('../config/multer');
 const { validateImageUpload } = require('../middlewares/cdn.middleware');
 const parseFormData = require('../middlewares/parseFormData.middleware');
 const {
@@ -57,7 +57,7 @@ const {
 //#endregion
 router.post(
   '/register',
-  upload.single('profile_picture'),
+  uploadImage.single('profile_picture'),
   parseFormData,
   validate(registerSchema),
   validateImageUpload,
@@ -97,7 +97,7 @@ router.post(
 router.put(
   '/profile-picture',
   authenticate,
-  upload.single('profile_picture'),
+  uploadImage.single('profile_picture'),
   validateImageUpload,
   updateProfilePicture,
 );
