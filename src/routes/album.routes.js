@@ -2,7 +2,19 @@ const router = require('express').Router();
 const { albumService } = require('../services');
 const { authenticate, isArtist } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
-const { albumSchema } = require('./validations/music.validation');
+const {
+  albumSchema,
+  albumPlaylistSchema,
+} = require('./validations/music.validation');
+const {
+  createAlbum,
+  updateAlbum,
+  updateAlbumCoverArt,
+  deleteAlbum,
+} = require('../controllers/album.controller');
+const { uploadImage } = require('../config/multer');
+const parseFormData = require('../middlewares/parseFormData.middleware');
+const { validateImageUpload } = require('../middlewares/cdn.middleware');
 
 /**
  * @swagger
@@ -11,6 +23,7 @@ const { albumSchema } = require('./validations/music.validation');
  *   description: Album management and retrieval operations
  */
 
+//#region
 /**
  * @swagger
  * /albums:
@@ -36,6 +49,7 @@ const { albumSchema } = require('./validations/music.validation');
  *                         items:
  *                           $ref: '#/components/schemas/Track'
  */
+//#endregion
 router.get('/', async (req, res, next) => {
   try {
     const albums = await albumService.findAll({
@@ -47,6 +61,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /albums/search:
@@ -70,6 +85,7 @@ router.get('/', async (req, res, next) => {
  *               items:
  *                 $ref: '#/components/schemas/Album'
  */
+//#endregion
 router.get('/search', async (req, res, next) => {
   try {
     const albums = await albumService.searchAlbums(req.query.q);
@@ -79,6 +95,7 @@ router.get('/search', async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /albums/genre/{genre}:
@@ -102,6 +119,7 @@ router.get('/search', async (req, res, next) => {
  *               items:
  *                 $ref: '#/components/schemas/Album'
  */
+//#endregion
 router.get('/genre/:genre', async (req, res, next) => {
   try {
     const albums = await albumService.findByGenre(req.params.genre);
@@ -111,6 +129,7 @@ router.get('/genre/:genre', async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /albums/artist/{artistId}:
@@ -134,6 +153,7 @@ router.get('/genre/:genre', async (req, res, next) => {
  *               items:
  *                 $ref: '#/components/schemas/Album'
  */
+//#endregion
 router.get('/artist/:artistId', async (req, res, next) => {
   try {
     const albums = await albumService.getArtistAlbums(req.params.artistId);
@@ -143,6 +163,7 @@ router.get('/artist/:artistId', async (req, res, next) => {
   }
 });
 
+//#region
 /**
  * @swagger
  * /albums/{id}:
@@ -175,6 +196,7 @@ router.get('/artist/:artistId', async (req, res, next) => {
  *       404:
  *         description: Album not found
  */
+//#endregion
 router.get('/:id', async (req, res, next) => {
   try {
     const album = await albumService.getAlbumWithDetails(req.params.id);
@@ -187,6 +209,7 @@ router.get('/:id', async (req, res, next) => {
 // Protected routes
 router.use(authenticate);
 
+//#region
 /**
  * @swagger
  * /albums:
@@ -238,24 +261,18 @@ router.use(authenticate);
  *       403:
  *         description: Forbidden - Can only create albums for yourself
  */
-router.post('/', isArtist, validate(albumSchema), async (req, res, next) => {
-  try {
-    if (
-      req.user.artist_id !== req.body.primary_artist_id &&
-      req.user.user_type !== 'admin'
-    ) {
-      return res
-        .status(403)
-        .json({ message: 'You can only create albums for yourself' });
-    }
+//#endregion
+router.post(
+  '/',
+  isArtist,
+  uploadImage.single('cover_art_url'),
+  parseFormData,
+  validate(albumSchema),
+  validateImageUpload,
+  createAlbum,
+);
 
-    const album = await albumService.createAlbum(req.body, req.body.artist_ids);
-    res.status(201).json(album);
-  } catch (error) {
-    next(error);
-  }
-});
-
+//#region
 /**
  * @swagger
  * /albums/{id}:
@@ -293,26 +310,45 @@ router.post('/', isArtist, validate(albumSchema), async (req, res, next) => {
  *       404:
  *         description: Album not found
  */
-router.put('/:id', isArtist, validate(albumSchema), async (req, res, next) => {
-  try {
-    const album = await albumService.findById(req.params.id);
+//#endregion
+router.put('/:id', isArtist, validate(albumPlaylistSchema), updateAlbum);
 
-    if (
-      album.primary_artist_id !== req.user.artist_id &&
-      req.user.user_type !== 'admin'
-    ) {
-      return res
-        .status(403)
-        .json({ message: 'You can only update your own albums' });
-    }
+//#region
+/**
+ * @swagger
+ * /albums/{id}/cover:
+ *   put:
+ *     summary: Update an album's cover art
+ *     tags: [Albums]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Album ID
+ *     responses:
+ *       200:
+ *         description: Album cover art updated successfully
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden - Can only update own albums
+ *       404:
+ *         description: Album not found
+ */
+//#endregion
+router.put(
+  '/:id/cover',
+  isArtist,
+  uploadImage.single('cover_art_url'),
+  validateImageUpload,
+  updateAlbumCoverArt,
+);
 
-    const updatedAlbum = await albumService.update(req.params.id, req.body);
-    res.json(updatedAlbum);
-  } catch (error) {
-    next(error);
-  }
-});
-
+//#region
 /**
  * @swagger
  * /albums/{id}:
@@ -338,26 +374,10 @@ router.put('/:id', isArtist, validate(albumSchema), async (req, res, next) => {
  *       404:
  *         description: Album not found
  */
-router.delete('/:id', isArtist, async (req, res, next) => {
-  try {
-    const album = await albumService.findById(req.params.id);
+//#endregion
+router.delete('/:id', isArtist, deleteAlbum);
 
-    if (
-      album.primary_artist_id !== req.user.artist_id &&
-      req.user.user_type !== 'admin'
-    ) {
-      return res
-        .status(403)
-        .json({ message: 'You can only delete your own albums' });
-    }
-
-    await albumService.delete(req.params.id);
-    res.status(204).end();
-  } catch (error) {
-    next(error);
-  }
-});
-
+//#region
 /**
  * @swagger
  * /albums/{id}/update-stats:
@@ -387,6 +407,7 @@ router.delete('/:id', isArtist, async (req, res, next) => {
  *       404:
  *         description: Album not found
  */
+//#endregion
 router.post('/:id/update-stats', isArtist, async (req, res, next) => {
   try {
     const album = await albumService.findById(req.params.id);

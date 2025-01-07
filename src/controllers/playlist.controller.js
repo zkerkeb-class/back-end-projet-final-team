@@ -1,87 +1,81 @@
-const { playlist } = require('../models');
+const { playlistService } = require('../services');
 
-const createPlaylist = async (req, res, _next) => {
+const createPlaylist = async (req, res, next) => {
   try {
-    const { playlist: playlistData } = req.body;
-    const newPlaylist = await playlist.create(playlistData);
-    return res.status(201).send({
-      message: 'Playlist created successfully',
-      playlist: newPlaylist,
-    });
+    const playlist = await playlistService.createPlaylist(req.user.id);
+    res.status(201).json(playlist);
   } catch (error) {
-    return res.status(500).send({ error: error.message });
+    next(error);
   }
 };
 
-const getPlaylists = async (req, res, _next) => {
+const updatePlaylistData = async (req, res, next) => {
   try {
-    const playlists = await playlist.findAll({
-      attributes: { exclude: ['deletedAt', 'updatedAt'] },
-      limit: 20,
-    });
-    return res.status(200).send(playlists);
-  } catch (error) {
-    return res.status(500).send({ error: error.message });
-  }
-};
+    const playlist = await playlistService.findById(req.params.id);
 
-const getPlaylistById = async (req, res, _next) => {
-  try {
-    const { id } = req.params;
-    const playlist = await playlist.findByPk(id);
-    if (!playlist) {
-      return res.status(404).send({ message: 'Playlist not found' });
-    }
-    return res.status(200).send(playlist);
-  } catch (error) {
-    return res.status(500).send({ error: error.message });
-  }
-};
-
-const updatePlaylist = async (req, res, _next) => {
-  try {
-    const { id } = req.params;
-    const [updatedRowsCount] = await playlist.update(req.body, {
-      where: { id: id },
-    });
-    if (updatedRowsCount === 0) {
-      return res.status(404).send({ message: 'Playlist not found' });
+    if (playlist.creator_id !== req.user.id) {
+      return res.status(403).json({
+        message: 'You can only update your own playlists',
+      });
     }
 
-    const updatedPlaylist = await playlist.findByPk(id, {
-      attributes: { exclude: ['deletedAt', 'updatedAt'] },
-    });
-
-    return res.status(200).send({
-      message: 'Playlist updated successfully',
-      playlist: updatedPlaylist,
-    });
+    const updatedPlaylist = await playlistService.updatePlaylistData(
+      req.params.id,
+      req.body,
+    );
+    res.json(updatedPlaylist);
   } catch (error) {
-    return res.status(500).send({ error: error.message });
+    next(error);
   }
 };
 
-const deletePlaylist = async (req, res, _next) => {
+const updatePlaylistCover = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const playlist = await playlist.findByPk(id);
-
-    if (!playlist) {
-      return res.status(404).send({ message: 'Playlist not found' });
+    if (!req.file) {
+      return res.status(400).json({ message: 'No cover image provided' });
     }
 
-    await playlist.destroy();
+    const playlist = await playlistService.findById(req.params.id);
 
-    return res.status(204).send();
+    if (playlist.creator_id !== req.user.id) {
+      return res.status(403).json({
+        message: 'You can only update your own playlists',
+      });
+    }
+
+    const updatedPlaylist = await playlistService.updatePlaylistCover(
+      req.params.id,
+      req.file.buffer,
+    );
+    res.json(updatedPlaylist);
   } catch (error) {
-    return res.status(500).send({ error: error.message });
+    next(error);
+  }
+};
+
+const deletePlaylist = async (req, res, next) => {
+  try {
+    const playlist = await playlistService.findById(req.params.id);
+
+    if (playlist.creator_id !== req.user.id) {
+      return res
+        .status(403)
+        .json({ message: 'You can only delete your own playlists' });
+    }
+
+    await playlistService.deletePlaylist(
+      req.params.id,
+      playlist.cover_images?.baseKey,
+    );
+    res.status(204).end();
+  } catch (error) {
+    next(error);
   }
 };
 
 module.exports = {
   createPlaylist,
-  getPlaylists,
-  getPlaylistById,
-  updatePlaylist,
+  updatePlaylistData,
+  updatePlaylistCover,
   deletePlaylist,
 };

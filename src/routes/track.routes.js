@@ -3,6 +3,10 @@ const { trackService } = require('../services');
 const { authenticate, isArtist } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
 const { trackSchema } = require('./validations/music.validation');
+const { createTrack, deleteTrack } = require('../controllers/track.controller');
+const { uploadAudio, handleMulterError } = require('../config/multer');
+const { validateImageUpload } = require('../middlewares/cdn.middleware');
+const parseFormData = require('../middlewares/parseFormData.middleware');
 
 /**
  * @swagger
@@ -174,45 +178,31 @@ router.use(authenticate);
  * @swagger
  * /tracks:
  *   post:
- *     summary: Create a new track
+ *     summary: Create a new track with audio and cover image
  *     tags: [Tracks]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
- *               - title
- *               - artist_id
- *               - duration_seconds
- *               - genre
- *               - audio_file_path
+ *               - audio
+ *               - data
  *             properties:
- *               title:
+ *               audio:
  *                 type: string
- *               artist_id:
- *                 type: integer
- *               album_id:
- *                 type: integer
- *               duration_seconds:
- *                 type: integer
- *               track_number:
- *                 type: integer
- *               genre:
- *                 $ref: '#/components/schemas/Genre'
- *               audio_file_path:
+ *                 format: binary
+ *                 description: Audio file (mp3, wav, or m4a)
+ *               cover:
  *                 type: string
- *               file_formats:
- *                 type: array
- *                 items:
- *                   type: string
- *               lyrics:
+ *                 format: binary
+ *                 description: Cover image file
+ *               data:
  *                 type: string
- *               phonetic_title:
- *                 type: string
+ *                 description: JSON string containing track metadata
  *     responses:
  *       201:
  *         description: Track created successfully
@@ -220,30 +210,20 @@ router.use(authenticate);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Track'
- *       400:
- *         description: Validation error
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden - Can only create tracks for yourself
  */
-router.post('/', isArtist, validate(trackSchema), async (req, res, next) => {
-  try {
-    if (
-      req.user.artist_id !== req.body.artist_id &&
-      req.user.user_type !== 'admin'
-    ) {
-      return res
-        .status(403)
-        .json({ message: 'You can only create tracks for yourself' });
-    }
-
-    const track = await trackService.create(req.body);
-    res.status(201).json(track);
-  } catch (error) {
-    next(error);
-  }
-});
+router.post(
+  '/',
+  isArtist,
+  uploadAudio.fields([
+    { name: 'audio', maxCount: 1 },
+    { name: 'cover', maxCount: 1 },
+  ]),
+  handleMulterError,
+  validateImageUpload,
+  parseFormData,
+  validate(trackSchema),
+  createTrack,
+);
 
 /**
  * @swagger
@@ -306,7 +286,7 @@ router.put('/:id', isArtist, validate(trackSchema), async (req, res, next) => {
  * @swagger
  * /tracks/{id}:
  *   delete:
- *     summary: Delete a track
+ *     summary: Delete a track and its associated files
  *     tags: [Tracks]
  *     security:
  *       - bearerAuth: []
@@ -320,32 +300,8 @@ router.put('/:id', isArtist, validate(trackSchema), async (req, res, next) => {
  *     responses:
  *       204:
  *         description: Track deleted successfully
- *       401:
- *         description: Unauthorized
- *       403:
- *         description: Forbidden - Can only delete own tracks
- *       404:
- *         description: Track not found
  */
-router.delete('/:id', isArtist, async (req, res, next) => {
-  try {
-    const track = await trackService.findById(req.params.id);
-
-    if (
-      track.artist_id !== req.user.artist_id &&
-      req.user.user_type !== 'admin'
-    ) {
-      return res
-        .status(403)
-        .json({ message: 'You can only delete your own tracks' });
-    }
-
-    await trackService.delete(req.params.id);
-    res.status(204).end();
-  } catch (error) {
-    next(error);
-  }
-});
+router.delete('/:id', isArtist, deleteTrack);
 
 /**
  * @swagger

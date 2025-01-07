@@ -1,7 +1,16 @@
 const { USER_TYPE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
+const isValidImageFormat = require('../utils/isValideImageFormat');
 
-class User extends Model {}
+class User extends Model {
+  getProfilePictureUrl(size = 'medium', format = 'webp') {
+    const profilePicture = this.getDataValue('profile_picture');
+    if (!profilePicture?.urls?.[size]?.[format]) {
+      return null;
+    }
+    return profilePicture.urls[size][format];
+  }
+}
 
 User.init(
   {
@@ -38,8 +47,18 @@ User.init(
     last_name: {
       type: DataTypes.STRING(100),
     },
+    profile_picture: {
+      type: DataTypes.JSONB,
+      defaultValue: null,
+      validate: {
+        isValidImageFormat,
+      },
+    },
     profile_picture_url: {
-      type: DataTypes.TEXT,
+      type: DataTypes.VIRTUAL,
+      get() {
+        return this.getProfilePictureUrl();
+      },
     },
     artist_id: {
       type: DataTypes.INTEGER,

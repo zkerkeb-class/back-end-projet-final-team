@@ -7,6 +7,11 @@ const apiRouter = require('../routes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('../docs/swagger');
 const {
+  serveImages,
+  // negotiateImageFormat,
+} = require('../middlewares/cdn.middleware');
+const path = require('path');
+const {
   logger,
   configureLogger,
   createMorganMiddleware,
@@ -38,6 +43,8 @@ app.use(express.json());
 app.use(createMorganMiddleware(env));
 app.use(limiter);
 app.use('/api/v1', apiRouter);
+// app.use(negotiateImageFormat);
+app.use('/storage', serveImages(path.join(__dirname, '../../storage')));
 
 app.use((req, _res, next) => {
   configuredLogger.info(`Request received: ${req.method} ${req.url}`);
