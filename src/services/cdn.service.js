@@ -81,8 +81,6 @@ class CdnService {
     if (!baseKey) return;
     await s3Service.deleteFolder(baseKey);
   }
-
-  // async processAudioTrack(buffer, baseKey) {}
 }
 
 module.exports = new CdnService();

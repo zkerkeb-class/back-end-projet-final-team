@@ -1,12 +1,12 @@
 const isValidImageFormat = (value) => {
   if (value === null) return;
 
-  const requiredSizes = ['original', 'thumbnail', 'medium', 'large'];
-  const requiredFormats = ['webp', 'jpeg', 'png'];
-
   if (!value.urls || typeof value.urls !== 'object') {
     throw new Error('Invalid profile picture format');
   }
+
+  const requiredSizes = ['original', 'thumbnail', 'medium', 'large'];
+  const requiredFormats = ['webp', 'jpeg', 'png'];
 
   // Verify all required sizes exist
   for (const size of requiredSizes) {

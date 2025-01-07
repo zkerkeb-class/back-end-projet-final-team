@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const createUniqueId = require('../utils/createUniqueId');
 const logger = require('../utils/loggerUtil');
+const s3Service = require('./s3.service');
 
 // Set FFmpeg path
 ffmpeg.setFfmpegPath(ffmpegPath);
@@ -105,9 +106,23 @@ class AudioService {
         await fs.unlink(wavPath);
       }
 
+      for (const format in filePaths) {
+        const relativePath = filePaths[format];
+        const fullPath = path.join(this.audioBasePath, relativePath);
+        const fileBuffer = await fs.readFile(fullPath);
+        const key = `${baseKey}/${path.basename(relativePath)}`;
+        filePaths[format] = await s3Service.uploadBuffer(
+          fileBuffer,
+          key,
+          'audio/mpeg',
+        );
+      }
+
+      await fs.rm(basePath, { recursive: true, force: true });
+
       return {
         baseKey,
-        formats: filePaths,
+        urls: filePaths,
       };
     } catch (error) {
       logger.error('Error processing audio:', error);

@@ -1,15 +1,18 @@
 const cdnService = require('../services/cdn.service');
+const fs = require('fs');
 
 const defaultImages = {
-  profile: require('fs').readFileSync('src/img/default-profile.png'),
-  playslit: require('fs').readFileSync('src/img/default-playlist.jpg'),
-  album: require('fs').readFileSync('src/img/default-album.jpg'),
+  profile: fs.readFileSync('src/default/img/default-profile.png'),
+  playslit: fs.readFileSync('src/default/img/default-playlist.jpg'),
+  album: fs.readFileSync('src/default/img/default-album.jpg'),
+  track: fs.readFileSync('src/default/img/default-track.jpg'),
 };
 
 const defaultUrls = {
   profile: {},
   playslit: {},
   album: {},
+  track: {},
 };
 
 const initDefaultImages = async () => {
@@ -20,6 +23,7 @@ const initDefaultImages = async () => {
     defaultImages.playslit,
   );
   defaultUrls.album = await cdnService.processAlbumCover(defaultImages.album);
+  defaultUrls.track = await cdnService.processTrackCover(defaultImages.track);
 
   return defaultUrls;
 };

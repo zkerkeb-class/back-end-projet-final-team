@@ -14,6 +14,8 @@ const {
 } = require('../models');
 const { GENRE, USER_TYPE } = require('../models/enums');
 const initDefaultImages = require('./initDefaultImages');
+const initDefaultTracks = require('./initDefaultTrack');
+const { connect, sequelize } = require('../services/db.service');
 
 const TOTAL_USERS = 10;
 const TOTAL_ARTISTS = 5;
@@ -23,9 +25,17 @@ const PLAYLISTS_PER_USER = 2;
 
 async function seedDatabase() {
   try {
+    await connect();
+    logger.log('Syncing database...');
+    await sequelize.sync({ force: true });
+
     logger.log('Initializing default images...');
     const defaultUrls = await initDefaultImages();
     logger.log('Default images initialized:', defaultUrls);
+
+    logger.log('Initializing default tracks...');
+    const defaultTrackUrl = await initDefaultTracks();
+    logger.log('Default tracks initialized:', defaultTrackUrl);
 
     logger.log('Starting database seeding...');
 
@@ -71,7 +81,7 @@ async function seedDatabase() {
         .fill()
         .map(async () => {
           const user = await User.create({
-            username: faker.internet.userName(),
+            username: faker.internet.username(),
             email: faker.internet.email(),
             password_hash: await bcrypt.hash('password123', 10),
             user_type: USER_TYPE.STANDARD,
@@ -137,13 +147,13 @@ async function seedDatabase() {
           .fill()
           .map(async () => {
             const album = await Album.create({
+              cover_art_url: defaultUrls.album,
               title: faker.music.songName(),
               release_date: faker.date.past(),
               genre: artist.genre,
               primary_artist_id: artist.id,
               total_tracks: TRACKS_PER_ALBUM,
               popularity_score: faker.number.float({ min: 0, max: 100 }),
-              cover_art_url: defaultUrls.album,
             });
 
             await AlbumArtist.create({
@@ -156,16 +166,15 @@ async function seedDatabase() {
             const tracks = await Promise.all(
               Array(TRACKS_PER_ALBUM)
                 .fill()
-                .map(async (_, index) => {
+                .map(async () => {
                   return Track.create({
                     title: faker.music.songName(),
                     album_id: album.id,
                     artist_id: artist.id,
                     duration_seconds: faker.number.int({ min: 120, max: 300 }),
-                    track_number: index + 1,
                     genre: album.genre,
-                    audio_file_path: faker.system.filePath(),
-                    file_formats: ['mp3', 'wav'],
+                    audio_file_path: defaultTrackUrl,
+                    cover: defaultUrls.track,
                     popularity_score: faker.number.float({ min: 0, max: 100 }),
                     total_plays: faker.number.int({ min: 0, max: 1000000 }),
                     release_date: album.release_date,

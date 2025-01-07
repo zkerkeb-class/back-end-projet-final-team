@@ -25,27 +25,21 @@ const createTrack = async (req, res, next) => {
       });
     }
 
-    logger.info('Processing audio file...');
     const audioResult = await audioService.processAudio(
       audioFile.buffer,
       audioFormat,
     );
 
-    // Process cover image if provided
     let coverResult = null;
     if (coverFile) {
-      logger.info('Processing cover image...');
       coverResult = await cdnService.processTrackCover(coverFile.buffer);
     }
 
-    // Create track record
     const trackData = {
       ...req.body,
       artist_id: req.user.artist_id,
-      audio_formats: Object.keys(audioResult.formats),
-      audio_base_key: audioResult.baseKey,
-      cover_image: coverResult,
-      file_formats: audioResult.formats,
+      cover: coverResult,
+      audio_file_path: audioResult,
     };
 
     const track = await trackService.create(trackData);
