@@ -30,6 +30,10 @@ const {
   ALLOWED_ORIGINS,
   JWT_SECRET,
   JWT_REFRESH_SECRET,
+  AWS_REGION,
+  AWS_ACCESS_KEY_ID,
+  AWS_SECRET_ACCESS_KEY,
+  AWS_S3_BUCKET,
 } = process.env;
 
 if (
@@ -41,7 +45,11 @@ if (
   !DB_PASSWORD,
   !ALLOWED_ORIGINS,
   !JWT_SECRET,
-  !JWT_REFRESH_SECRET)
+  !JWT_REFRESH_SECRET,
+  !AWS_REGION,
+  !AWS_ACCESS_KEY_ID,
+  !AWS_SECRET_ACCESS_KEY,
+  !AWS_S3_BUCKET)
 ) {
   throw new Error('Some environment variables are missing');
 }
@@ -59,6 +67,12 @@ const config = {
   allowedOrigins: ALLOWED_ORIGINS.split(','),
   jwtSecret: JWT_SECRET,
   jwtRefreshSecret: JWT_REFRESH_SECRET,
+  aws: {
+    region: AWS_REGION,
+    accessKeyId: AWS_ACCESS_KEY_ID,
+    secretAccessKey: AWS_SECRET_ACCESS_KEY,
+    bucket: AWS_S3_BUCKET,
+  },
 };
 
 module.exports = config;

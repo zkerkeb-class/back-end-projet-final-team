@@ -1,6 +1,7 @@
 const { GENRE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
-
+const isValidImageFormat = require('../utils/isValideImageFormat');
+const isValidTrackFormat = require('../utils/isValidTrackFormat');
 class Track extends Model {}
 
 Track.init(
@@ -41,10 +42,18 @@ Track.init(
       type: DataTypes.ENUM(...Object.values(GENRE)),
     },
     audio_file_path: {
-      type: DataTypes.TEXT,
+      type: DataTypes.JSON,
+      defaultValue: null,
+      validate: {
+        isValidTrackFormat,
+      },
     },
-    file_formats: {
-      type: DataTypes.ARRAY(DataTypes.TEXT),
+    cover: {
+      type: DataTypes.JSONB,
+      defaultValue: null,
+      validate: {
+        isValidImageFormat,
+      },
     },
     popularity_score: {
       type: DataTypes.FLOAT,

@@ -1,80 +1,69 @@
-const { User, Role, Artist } = require('../models');
-const { generateToken } = require('../services/jwt.service');
-const bcrypt = require('bcryptjs');
+const { userService } = require('../services');
 
-const registerUser = async (req, res) => {
+const registerUser = async (req, res, next) => {
   try {
-    const { role } = req.body;
-    const userRole = await Role.findOne({ where: { name: role } });
-    const user = await User.create({
+    // Add profile picture buffer to user data if image was uploaded
+    const userData = {
       ...req.body,
-      roleId: userRole.id,
-    });
+      profilePictureBuffer: req.file?.buffer,
+    };
 
-    if (role === 'artist') {
-      await Artist.create({
-        user_id: user.id,
-        name: user.roleId,
-      });
-    }
-
-    const token = generateToken({
-      id: user.id,
-      role: user.roleId,
-    });
-
-    res.status(201).send({
-      user: {
-        username: user.username,
-        email: user.email,
-        role: userRole.name,
-        images: user.images,
-      },
-      token,
-    });
+    const user = await userService.register(userData);
+    res.status(201).json(user);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 };
 
-const loginUser = async (req, res) => {
+const updateProfilePicture = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+
+    const user = await userService.updateProfilePicture(
+      req.user.id,
+      req.file.buffer,
+    );
+    res.json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({
-      where: { email },
-      include: { model: Role, as: 'role' },
-    });
-
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      res.status(401).json({ error: 'Invalid password' });
-    }
-
-    const token = generateToken({
-      id: user.id,
-      role: user.role.id,
-    });
-
-    res.status(200).send({
-      user: {
-        username: user.username,
-        email: user.email,
-        role: user.role.name,
-        images: user.images,
-      },
-      token,
-    });
+    const result = await userService.login(email, password);
+    res.json(result);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
+  }
+};
+
+const refreshToken = async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body;
+    const result = await userService.refreshToken(refreshToken);
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const logoutUser = async (req, res, next) => {
+  try {
+    await userService.logout(req.user.id);
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    next(error);
   }
 };
 
 module.exports = {
   registerUser,
+  updateProfilePicture,
   loginUser,
+  refreshToken,
+  logoutUser,
 };

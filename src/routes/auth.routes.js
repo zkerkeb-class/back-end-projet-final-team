@@ -1,7 +1,16 @@
 const router = require('express').Router();
-const { userService } = require('../services');
+const {
+  registerUser,
+  loginUser,
+  refreshToken,
+  logoutUser,
+  updateProfilePicture,
+} = require('../controllers/auth.controller');
 const { authenticate } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
+const { uploadImage } = require('../config/multer');
+const { validateImageUpload } = require('../middlewares/cdn.middleware');
+const parseFormData = require('../middlewares/parseFormData.middleware');
 const {
   registerSchema,
   loginSchema,
@@ -15,6 +24,7 @@ const {
  *   description: User authentication and authorization
  */
 
+//#region
 /**
  * @swagger
  * /auth/register:
@@ -24,37 +34,18 @@ const {
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
- *               - email
- *               - password
- *               - username
- *               - user_type
+ *               - data
  *             properties:
- *               email:
+ *               data:
  *                 type: string
- *                 format: email
- *                 description: User's email address
- *               password:
+ *                 description: JSON string containing user data
+ *               profile_picture:
  *                 type: string
- *                 format: password
- *                 minLength: 6
- *                 description: User's password
- *               username:
- *                 type: string
- *                 minLength: 3
- *                 description: User's username
- *               user_type:
- *                 $ref: '#/components/schemas/UserType'
- *               first_name:
- *                 type: string
- *               last_name:
- *                 type: string
- *               profile_picture_url:
- *                 type: string
- *                 format: uri
+ *                 format: binary
  *     responses:
  *       201:
  *         description: User successfully registered
@@ -62,35 +53,56 @@ const {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/User'
- *       400:
- *         description: Validation error
+ */
+//#endregion
+router.post(
+  '/register',
+  uploadImage.single('profile_picture'),
+  parseFormData,
+  validate(registerSchema),
+  validateImageUpload,
+  registerUser,
+);
+
+//#region
+/**
+ * @swagger
+ * /auth/profile-picture:
+ *   put:
+ *     summary: Update user profile picture
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - profile_picture
+ *             properties:
+ *               profile_picture:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Profile picture updated successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Error'
+ *               $ref: '#/components/schemas/User'
  */
-router.post('/register', validate(registerSchema), async (req, res, next) => {
-  try {
-    const user = await userService.register(req.body);
-    res.status(201).json({
-      accessToken: user.accessToken,
-      refreshToken: user.refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        username: user.username,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        roles: user.roles,
-        user_type: user.user_type,
-        profile_picture_url: user.profile_picture_url,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+//#endregion
+router.put(
+  '/profile-picture',
+  authenticate,
+  uploadImage.single('profile_picture'),
+  validateImageUpload,
+  updateProfilePicture,
+);
 
+//#region
 /**
  * @swagger
  * /auth/login:
@@ -121,42 +133,17 @@ router.post('/register', validate(registerSchema), async (req, res, next) => {
  *             schema:
  *               type: object
  *               properties:
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
  *                 accessToken:
  *                   type: string
  *                 refreshToken:
  *                   type: string
- *                 user:
- *                   $ref: '#/components/schemas/User'
- *       401:
- *         description: Invalid credentials
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
  */
-router.post('/login', validate(loginSchema), async (req, res, next) => {
-  try {
-    const { email, password } = req.body;
-    const result = await userService.login(email, password);
-    res.json({
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        username: result.user.username,
-        first_name: result.user.first_name,
-        last_name: result.user.last_name,
-        roles: result.user.roles,
-        profile_picture_url: result.user.profile_picture_url,
-        user_type: result.user.user_type,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+//#endregion
+router.post('/login', validate(loginSchema), loginUser);
 
+//#region
 /**
  * @swagger
  * /auth/refresh-token:
@@ -191,20 +178,10 @@ router.post('/login', validate(loginSchema), async (req, res, next) => {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post(
-  '/refresh-token',
-  validate(refreshTokenSchema),
-  async (req, res, next) => {
-    try {
-      const { refreshToken } = req.body;
-      const result = await userService.refreshToken(refreshToken);
-      res.json(result);
-    } catch (error) {
-      next(error);
-    }
-  },
-);
+//#endregion
+router.post('/refresh-token', validate(refreshTokenSchema), refreshToken);
 
+//#region
 /**
  * @swagger
  * /auth/logout:
@@ -230,13 +207,7 @@ router.post(
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/logout', authenticate, async (req, res, next) => {
-  try {
-    await userService.logout(req.user.id);
-    res.json({ message: 'Logged out successfully' });
-  } catch (error) {
-    next(error);
-  }
-});
+//#endregion
+router.post('/logout', authenticate, logoutUser);
 
 module.exports = router;

@@ -1,20 +1,72 @@
 const BaseService = require('./base.service');
 const { Playlist, Track, Artist, Album, PlaylistTrack } = require('../models');
 const { Op } = require('sequelize');
+const cdnService = require('./cdn.service');
 
 class PlaylistService extends BaseService {
   constructor() {
     super(Playlist);
   }
 
-  async createPlaylist(userId, playlistData) {
+  async createPlaylist(userId) {
     try {
+      const numPlaylists = await Playlist.count({
+        where: { creator_id: userId },
+      });
       return await this.create({
-        ...playlistData,
         creator_id: userId,
+        name: `My playlist ${numPlaylists + 1}`,
+        is_public: true,
       });
     } catch (error) {
       throw new Error(`Error creating playlist: ${error.message}`);
+    }
+  }
+
+  async updatePlaylistData(playlistId, playlistData) {
+    if (!playlistId) {
+      throw new Error('Playlist ID is required');
+    }
+    try {
+      return await this.update(playlistId, {
+        name: playlistData.name,
+        is_public: playlistData.is_public,
+      });
+    } catch (error) {
+      throw new Error(`Error updating playlist data: ${error.message}`);
+    }
+  }
+
+  async updatePlaylistCover(playlistId, imageBuffer) {
+    if (!playlistId) {
+      throw new Error('Playlist ID is required');
+    }
+    try {
+      const playlist = await this.findById(playlistId);
+
+      // Delete old cover image if exists
+      if (playlist.cover_images?.baseKey) {
+        await cdnService.deleteProfilePictures(playlist.cover_images.baseKey);
+      }
+
+      const coverImage = await cdnService.processPlaylistPicture(imageBuffer);
+
+      return await this.update(playlistId, {
+        cover_images: coverImage,
+      });
+    } catch (error) {
+      throw new Error(`Error updating playlist cover: ${error.message}`);
+    }
+  }
+
+  async deletePlaylist(playlistId, baseKey) {
+    try {
+      if (baseKey) {
+        await cdnService.deleteProfilePictures(baseKey);
+      }
+      return await this.delete(playlistId);
+    } catch (error) {
+      throw new Error(`Error deleting playlist: ${error.message}`);
     }
   }
 

@@ -1,16 +1,23 @@
 const BaseService = require('./base.service');
 const { Album, Artist, Track, AlbumArtist } = require('../models');
 const { Op } = require('sequelize');
+const cdnService = require('./cdn.service');
 
 class AlbumService extends BaseService {
   constructor() {
     super(Album);
   }
 
-  async createAlbum(albumData, artistIds) {
+  async createAlbum(albumData) {
     try {
+      if (albumData.cover_art_url) {
+        albumData.cover_art_url = await cdnService.processAlbumCover(
+          albumData.cover_art_url,
+        );
+      }
       const album = await this.create(albumData);
 
+      const artistIds = albumData.artist_ids;
       if (artistIds && artistIds.length > 0) {
         await Promise.all(
           artistIds.map((artistId) =>
@@ -122,6 +129,30 @@ class AlbumService extends BaseService {
       });
     } catch (error) {
       throw new Error(`Error updating album stats: ${error.message}`);
+    }
+  }
+
+  async updateAlbumCover(album, coverArt) {
+    try {
+      if (album.cover_art_url?.baseKey) {
+        await cdnService.deleteProfilePictures(album.cover_art_url.baseKey);
+      }
+
+      const newCoverArt = await cdnService.processAlbumCover(coverArt);
+      return await this.update(album.id, { cover_art_url: newCoverArt });
+    } catch (error) {
+      throw new Error(`Error updating album cover: ${error.message}`);
+    }
+  }
+
+  async deleteAlbum(albumId, baseKey) {
+    try {
+      if (baseKey) {
+        await cdnService.deleteProfilePictures(baseKey);
+      }
+      return await this.delete(albumId);
+    } catch (error) {
+      throw new Error(`Error deleting album: ${error.message}`);
     }
   }
 }

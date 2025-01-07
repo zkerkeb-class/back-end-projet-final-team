@@ -51,6 +51,49 @@ const options = {
             },
           },
         },
+        ImageFormat: {
+          type: 'object',
+          properties: {
+            urls: {
+              type: 'object',
+              properties: {
+                original: {
+                  type: 'object',
+                  properties: {
+                    webp: { type: 'string', format: 'uri' },
+                    jpeg: { type: 'string', format: 'uri' },
+                    png: { type: 'string', format: 'uri' },
+                  },
+                },
+                thumbnail: {
+                  type: 'object',
+                  properties: {
+                    webp: { type: 'string', format: 'uri' },
+                    jpeg: { type: 'string', format: 'uri' },
+                    png: { type: 'string', format: 'uri' },
+                  },
+                },
+                medium: {
+                  type: 'object',
+                  properties: {
+                    webp: { type: 'string', format: 'uri' },
+                    jpeg: { type: 'string', format: 'uri' },
+                    png: { type: 'string', format: 'uri' },
+                  },
+                },
+                large: {
+                  type: 'object',
+                  properties: {
+                    webp: { type: 'string', format: 'uri' },
+                    jpeg: { type: 'string', format: 'uri' },
+                    png: { type: 'string', format: 'uri' },
+                  },
+                },
+              },
+            },
+            baseKey: { type: 'string' },
+          },
+        },
         Genre: {
           type: 'string',
           enum: Object.values(GENRE),
@@ -68,6 +111,7 @@ const options = {
             user_type: { $ref: '#/components/schemas/UserType' },
             first_name: { type: 'string' },
             last_name: { type: 'string' },
+            profile_picture: { $ref: '#/components/schemas/ImageFormat' },
             profile_picture_url: { type: 'string', format: 'uri' },
             is_verified: { type: 'boolean' },
             is_active: { type: 'boolean' },
