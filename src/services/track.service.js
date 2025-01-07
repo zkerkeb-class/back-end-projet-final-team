@@ -74,7 +74,7 @@ class TrackService extends BaseService {
         include: [
           {
             model: Artist,
-            attributes: ['id', 'name', 'image_url'],
+            attributes: ['id', 'name'], // TODO: Add artist profile image
           },
           {
             model: Album,
