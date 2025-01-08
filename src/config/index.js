@@ -34,6 +34,7 @@ const {
   AWS_ACCESS_KEY_ID,
   AWS_SECRET_ACCESS_KEY,
   AWS_S3_BUCKET,
+  AWS_CDN_URL,
 } = process.env;
 
 if (
@@ -49,7 +50,8 @@ if (
   !AWS_REGION,
   !AWS_ACCESS_KEY_ID,
   !AWS_SECRET_ACCESS_KEY,
-  !AWS_S3_BUCKET)
+  !AWS_S3_BUCKET,
+  !AWS_CDN_URL)
 ) {
   throw new Error('Some environment variables are missing');
 }
@@ -72,6 +74,7 @@ const config = {
     accessKeyId: AWS_ACCESS_KEY_ID,
     secretAccessKey: AWS_SECRET_ACCESS_KEY,
     bucket: AWS_S3_BUCKET,
+    cdnUrl: AWS_CDN_URL,
   },
 };
 

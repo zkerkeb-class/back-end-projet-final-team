@@ -11,6 +11,7 @@ class S3Service {
   AWS_ACCESS_KEY_ID = config.aws.accessKeyId;
   AWS_SECRET_ACCESS_KEY = config.aws.secretAccessKey;
   AWS_S3_BUCKET = config.aws.bucket;
+  AWS_CDN_URL = config.aws.cdnUrl;
 
   constructor() {
     this.s3Client = new S3Client({
@@ -72,7 +73,7 @@ class S3Service {
   }
 
   getPublicUrl(key) {
-    return `https://${this.bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
+    return `${this.AWS_CDN_URL}/${key}`;
   }
 }
 
