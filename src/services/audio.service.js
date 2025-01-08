@@ -1,5 +1,6 @@
 const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+const ffprobePath = require('@ffprobe-installer/ffprobe').path;
 const path = require('path');
 const fs = require('fs').promises;
 const createUniqueId = require('../utils/createUniqueId');
@@ -8,6 +9,7 @@ const s3Service = require('./s3.service');
 
 // Set FFmpeg path
 ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfprobePath(ffprobePath);
 
 class AudioService {
   constructor() {
@@ -60,6 +62,7 @@ class AudioService {
 
       // Save original format if it's supported
       const filePaths = {};
+      let duration = 0;
       if (this.supportedFormats.includes(originalFormat)) {
         const originalFilePath = path.join(basePath, `track.${originalFormat}`);
         await fs.copyFile(tempPath, originalFilePath);
@@ -67,6 +70,7 @@ class AudioService {
           this.audioBasePath,
           originalFilePath,
         );
+        duration = await this.getAudioDuration(originalFilePath);
       }
 
       // First, convert to WAV as intermediate format if not already WAV
@@ -123,6 +127,7 @@ class AudioService {
       return {
         baseKey,
         urls: filePaths,
+        duration,
       };
     } catch (error) {
       logger.error('Error processing audio:', error);
@@ -226,6 +231,55 @@ class AudioService {
     } catch {
       return false;
     }
+  }
+
+  async getAudioDuration(filePath) {
+    return new Promise((resolve, reject) => {
+      ffmpeg.ffprobe(filePath, (err, metadata) => {
+        if (err) {
+          logger.error('Error getting audio duration:', err);
+          reject(new Error(`Failed to get audio duration: ${err.message}`));
+          return;
+        }
+
+        if (metadata.format && metadata.format.duration) {
+          logger.debug('Duration obtained from format metadata');
+          return resolve(metadata.format.duration);
+        }
+
+        const audioStream = metadata.streams.find(
+          (stream) => stream.codec_type === 'audio',
+        );
+        if (audioStream) {
+          if (audioStream.duration) {
+            logger.debug('Duration obtained from audio stream');
+            return resolve(audioStream.duration);
+          }
+
+          if (
+            audioStream.time_base &&
+            audioStream.nb_frames &&
+            audioStream.duration_ts
+          ) {
+            const timeBase = audioStream.time_base.split('/');
+            const duration =
+              (audioStream.duration_ts * parseInt(timeBase[0])) /
+              parseInt(timeBase[1]);
+            logger.debug('Duration calculated from time_base and frames');
+            return resolve(duration);
+          }
+
+          if (audioStream.bit_rate && metadata.format.size) {
+            const duration = (metadata.format.size * 8) / audioStream.bit_rate;
+            logger.debug('Duration calculated from bit_rate and file size');
+            return resolve(duration);
+          }
+        }
+
+        logger.warn('Could not determine audio duration through any method');
+        reject(new Error('Could not determine audio duration'));
+      });
+    });
   }
 }
 

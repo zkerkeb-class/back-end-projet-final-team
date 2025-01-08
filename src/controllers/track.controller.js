@@ -30,6 +30,9 @@ const createTrack = async (req, res, next) => {
       audioFormat,
     );
 
+    const duration = audioResult.duration;
+    delete audioResult.duration;
+
     let coverResult = null;
     if (coverFile) {
       coverResult = await cdnService.processTrackCover(coverFile.buffer);
@@ -40,6 +43,7 @@ const createTrack = async (req, res, next) => {
       artist_id: req.user.artist_id,
       cover: coverResult,
       audio_file_path: audioResult,
+      duration_seconds: duration,
     };
 
     const track = await trackService.create(trackData);

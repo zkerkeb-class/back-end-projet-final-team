@@ -30,7 +30,7 @@ Track.init(
       },
     },
     duration_seconds: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.FLOAT,
     },
     track_number: {
       type: DataTypes.INTEGER,
