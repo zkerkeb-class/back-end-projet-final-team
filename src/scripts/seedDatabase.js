@@ -16,6 +16,7 @@ const { GENRE, USER_TYPE } = require('../models/enums');
 const initDefaultImages = require('./initDefaultImages');
 const initDefaultTracks = require('./initDefaultTrack');
 const { connect, sequelize } = require('../services/db.service');
+const initFuzzyMatch = require('./initFuzzyMatch');
 
 const TOTAL_USERS = 10;
 const TOTAL_ARTISTS = 5;
@@ -26,21 +27,22 @@ const PLAYLISTS_PER_USER = 2;
 async function seedDatabase() {
   try {
     await connect();
-    logger.log('Syncing database...');
+    logger.info('Syncing database...');
     await sequelize.sync({ force: true });
+    await initFuzzyMatch();
 
-    logger.log('Initializing default images...');
+    logger.info('Initializing default images...');
     const defaultUrls = await initDefaultImages();
-    logger.log('Default images initialized:', defaultUrls);
+    logger.info('Default images initialized:', defaultUrls);
 
-    logger.log('Initializing default tracks...');
+    logger.info('Initializing default tracks...');
     const defaultTrackUrl = await initDefaultTracks();
-    logger.log('Default tracks initialized:', defaultTrackUrl);
+    logger.info('Default tracks initialized:', defaultTrackUrl);
 
-    logger.log('Starting database seeding...');
+    logger.info('Starting database seeding...');
 
     // Create roles
-    logger.log('Creating roles...');
+    logger.info('Creating roles...');
     const roles = await Promise.all([
       Role.create({
         name: 'admin_user',
@@ -57,7 +59,7 @@ async function seedDatabase() {
     ]);
 
     // Create admin user
-    logger.log('Creating admin user...');
+    logger.info('Creating admin user...');
     const adminUser = await User.create({
       username: 'admin',
       email: 'admin@example.com',
@@ -75,7 +77,7 @@ async function seedDatabase() {
     });
 
     // Create standard users
-    logger.log('Creating standard users...');
+    logger.info('Creating standard users...');
     const users = await Promise.all(
       Array(TOTAL_USERS)
         .fill()
@@ -102,7 +104,7 @@ async function seedDatabase() {
     );
 
     // Create artists
-    logger.log('Creating artists...');
+    logger.info('Creating artists...');
     const artists = await Promise.all(
       Array(TOTAL_ARTISTS)
         .fill()
@@ -140,7 +142,7 @@ async function seedDatabase() {
     );
 
     // Create albums for each artist
-    logger.log('Creating albums and tracks...');
+    logger.info('Creating albums and tracks...');
     for (const artist of artists) {
       await Promise.all(
         Array(ALBUMS_PER_ARTIST)
@@ -189,7 +191,7 @@ async function seedDatabase() {
     }
 
     // Create playlists for each user
-    logger.log('Creating playlists...');
+    logger.info('Creating playlists...');
     const tracks = await Track.findAll();
 
     for (const user of [...users, adminUser]) {
@@ -227,7 +229,7 @@ async function seedDatabase() {
       );
     }
 
-    logger.log('Database seeding completed successfully!');
+    logger.info('Database seeding completed successfully!');
   } catch (error) {
     logger.error('Error seeding database:', error);
     throw error;
@@ -237,7 +239,7 @@ async function seedDatabase() {
 // Run the seeder
 seedDatabase()
   .then(() => {
-    logger.log('Seeding complete!');
+    logger.info('✅ Seeding complete!');
     process.exit(0);
   })
   .catch((error) => {
