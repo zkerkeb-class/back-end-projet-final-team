@@ -22,12 +22,19 @@ const app = express();
 const env = process.env.NODE_ENV || 'development';
 const configuredLogger = configureLogger(env);
 
+const excludeOrigins =
+  process.env.NODE_ENV === 'development' ? [process.env.GRAPHQL_STUDIO] : [];
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: 'Too many requests from this IP, please try again after 15 minutes',
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    const ip = req.ip || req.connection.remoteAddress;
+    return excludeOrigins.includes(ip);
+  },
 });
 
 const corsOptions = {
