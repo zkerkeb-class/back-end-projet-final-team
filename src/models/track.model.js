@@ -2,6 +2,8 @@ const { GENRE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
 const isValidImageFormat = require('../utils/isValideImageFormat');
 const isValidTrackFormat = require('../utils/isValidTrackFormat');
+const natural = require('natural');
+
 class Track extends Model {}
 
 Track.init(
@@ -93,5 +95,12 @@ Track.init(
     ],
   },
 );
+
+Track.beforeSave(async (track, _options) => {
+  if (track.title && (track.isNewRecord || track.changed('title'))) {
+    const metaphone = new natural.Metaphone();
+    track.phonetic_title = metaphone.process(track.title);
+  }
+});
 
 module.exports = Track;

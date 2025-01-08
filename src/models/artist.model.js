@@ -1,5 +1,6 @@
 const { GENRE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
+const natural = require('natural');
 
 class Artist extends Model {}
 
@@ -48,5 +49,12 @@ Artist.init(
     ],
   },
 );
+
+Artist.beforeSave(async (artist, _options) => {
+  if (artist.title && (artist.isNewRecord || artist.changed('title'))) {
+    const metaphone = new natural.Metaphone();
+    artist.phonetic_name = metaphone.process(artist.name);
+  }
+});
 
 module.exports = Artist;
