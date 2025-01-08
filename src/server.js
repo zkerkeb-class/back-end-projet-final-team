@@ -18,7 +18,7 @@ const start = async () => {
     const apolloServer = new ApolloServer({
       typeDefs,
       resolvers,
-      introspection: true, // Enable introspection for the playground
+      introspection: config.env === 'development' ? true : false, // Enable introspection for the playground
       playground: false, // Disable old playground
     });
 
@@ -28,7 +28,7 @@ const start = async () => {
     app.listen(port, () => {
       logger.info(`✅ Server listening on port ${port}`);
       logger.info(
-        `✅ GraphQL server ready at http://localhost:${port}${apolloServer.graphqlPath}`,
+        `✅ GraphQL server ready ${config.env === 'development' ? `at ${process.env.GRAPHQL_STUDIO}` : ''}`,
       );
     });
   } catch (err) {
