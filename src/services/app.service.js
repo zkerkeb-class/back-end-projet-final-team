@@ -22,9 +22,6 @@ const app = express();
 const env = process.env.NODE_ENV || 'development';
 const configuredLogger = configureLogger(env);
 
-const excludeOrigins =
-  process.env.NODE_ENV === 'development' ? [process.env.GRAPHQL_STUDIO] : [];
-
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -32,8 +29,11 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => {
-    const ip = req.ip || req.connection.remoteAddress;
-    return excludeOrigins.includes(ip);
+    const domain = req.get('origin') || req.get('referrer');
+    const allowedDomains = config.allowedOrigins;
+    return allowedDomains.some(
+      (allowedDomain) => domain && domain.includes(allowedDomain),
+    );
   },
 });
 

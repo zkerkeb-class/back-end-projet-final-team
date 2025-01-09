@@ -66,7 +66,10 @@ const config = {
     user: DB_USER,
     password: DB_PASSWORD,
   },
-  allowedOrigins: ALLOWED_ORIGINS.split(','),
+  allowedOrigins:
+    ENV === 'development'
+      ? ALLOWED_ORIGINS.split(',').concat('http://localhost:3000')
+      : ALLOWED_ORIGINS.split(','),
   jwtSecret: JWT_SECRET,
   jwtRefreshSecret: JWT_REFRESH_SECRET,
   aws: {
