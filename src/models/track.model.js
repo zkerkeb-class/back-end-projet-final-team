@@ -2,6 +2,8 @@ const { GENRE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
 const isValidImageFormat = require('../utils/isValideImageFormat');
 const isValidTrackFormat = require('../utils/isValidTrackFormat');
+const { applyPhoneticTitleHook } = require('../utils/hooks');
+
 class Track extends Model {}
 
 Track.init(
@@ -93,5 +95,7 @@ Track.init(
     ],
   },
 );
+
+applyPhoneticTitleHook(Track);
 
 module.exports = Track;

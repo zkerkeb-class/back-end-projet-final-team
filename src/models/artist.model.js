@@ -1,5 +1,6 @@
 const { GENRE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
+const { applyPhoneticTitleHook } = require('../utils/hooks');
 
 class Artist extends Model {}
 
@@ -27,7 +28,7 @@ Artist.init(
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
-    phonetic_name: {
+    phonetic_title: {
       type: DataTypes.TEXT,
     },
   },
@@ -43,10 +44,12 @@ Artist.init(
         fields: ['name'],
       },
       {
-        fields: ['phonetic_name'],
+        fields: ['phonetic_title'],
       },
     ],
   },
 );
+
+applyPhoneticTitleHook(Artist);
 
 module.exports = Artist;

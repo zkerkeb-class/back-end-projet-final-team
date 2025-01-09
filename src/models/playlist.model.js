@@ -1,5 +1,6 @@
 const { sequelize, DataTypes, Model } = require('../services/db.service');
 const isValidImageFormat = require('../utils/isValideImageFormat');
+const { applyPhoneticTitleHook } = require('../utils/hooks');
 
 class Playlist extends Model {}
 
@@ -10,7 +11,7 @@ Playlist.init(
       primaryKey: true,
       autoIncrement: true,
     },
-    name: {
+    title: {
       type: DataTypes.STRING(255),
       allowNull: false,
     },
@@ -40,6 +41,9 @@ Playlist.init(
         isValidImageFormat,
       },
     },
+    phonetic_title: {
+      type: DataTypes.TEXT,
+    },
   },
   {
     sequelize,
@@ -50,5 +54,7 @@ Playlist.init(
     updatedAt: 'updated_at',
   },
 );
+
+applyPhoneticTitleHook(Playlist);
 
 module.exports = Playlist;
