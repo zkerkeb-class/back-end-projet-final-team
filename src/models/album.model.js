@@ -1,6 +1,7 @@
 const { GENRE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
 const isValidImageFormat = require('../utils/isValideImageFormat');
+const { applyPhoneticTitleHook } = require('../utils/hooks');
 
 class Album extends Model {}
 
@@ -46,6 +47,9 @@ Album.init(
       type: DataTypes.FLOAT,
       defaultValue: 0,
     },
+    phonetic_title: {
+      type: DataTypes.TEXT,
+    },
   },
   {
     sequelize,
@@ -61,5 +65,7 @@ Album.init(
     ],
   },
 );
+
+applyPhoneticTitleHook(Album);
 
 module.exports = Album;

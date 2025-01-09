@@ -214,7 +214,7 @@ router.use(authenticate);
  *               image_url:
  *                 type: string
  *                 format: uri
- *               phonetic_name:
+ *               phonetic_title:
  *                 type: string
  *     responses:
  *       201:

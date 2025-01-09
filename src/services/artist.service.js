@@ -36,7 +36,7 @@ class ArtistService extends BaseService {
         where: {
           [Op.or]: [
             { name: { [Op.iLike]: `%${query}%` } },
-            { phonetic_name: { [Op.iLike]: `%${query}%` } },
+            { phonetic_title: { [Op.iLike]: `%${query}%` } },
           ],
         },
         include: [{ model: Album }],
