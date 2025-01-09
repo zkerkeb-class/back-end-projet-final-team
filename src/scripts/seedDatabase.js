@@ -33,11 +33,11 @@ async function seedDatabase() {
 
     logger.info('Initializing default images...');
     const defaultUrls = await initDefaultImages();
-    logger.info('Default images initialized:', defaultUrls);
+    logger.info('Default images initialized');
 
     logger.info('Initializing default tracks...');
     const defaultTrackUrl = await initDefaultTracks();
-    logger.info('Default tracks initialized:', defaultTrackUrl);
+    logger.info('Default tracks initialized');
 
     logger.info('Starting database seeding...');
 
@@ -114,7 +114,6 @@ async function seedDatabase() {
             bio: faker.lorem.paragraph(),
             genre: faker.helpers.arrayElement(Object.values(GENRE)),
             country: faker.location.country(),
-            phonetic_name: faker.person.fullName(),
             total_listeners: faker.number.int({ min: 1000, max: 1000000 }),
           });
 
@@ -200,7 +199,7 @@ async function seedDatabase() {
           .fill()
           .map(async () => {
             const playlist = await Playlist.create({
-              name: faker.music.genre(),
+              title: faker.music.genre(),
               creator_id: user.id,
               is_public: faker.datatype.boolean(),
               total_tracks: faker.number.int({ min: 5, max: 15 }),

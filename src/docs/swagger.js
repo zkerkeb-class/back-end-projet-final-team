@@ -129,7 +129,7 @@ const options = {
             country: { type: 'string' },
             image_url: { type: 'string', format: 'uri' },
             total_listeners: { type: 'integer' },
-            phonetic_name: { type: 'string' },
+            phonetic_title: { type: 'string' },
             created_at: { type: 'string', format: 'date-time' },
             updated_at: { type: 'string', format: 'date-time' },
           },
