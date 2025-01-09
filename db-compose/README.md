@@ -4,8 +4,8 @@ This project uses Docker Compose to set up multiple services within a single env
 
 ## Project Structure
 
-- **`docker-compose.yml`**: Defines services, networks, and volumes. Add more services here as the project grows.
-- **`.env.dev`**: Contains environment variables for configuring the services.
+- **`compose.yml`**: Defines services, networks, and volumes. Add more services here as the project grows.
+- **`.env`**: Contains environment variables for configuring the services.
 
 ## Prerequisites
 

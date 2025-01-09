@@ -16,10 +16,10 @@
 - [x] Install PostgreSQL
 - [x] Create database
 - [x] Configure database connection
-- [ ] Set up Sequelize ORM
-  - [ ] Create database models
+- [x] Set up Sequelize ORM
+  - [x] Create database models
   - [ ] Configure migrations
-  - [ ] Set up associations
+  - [x] Set up associations
 
 ## 🚦 Caching System
 
@@ -36,9 +36,9 @@
 
 ### CDN Configuration
 
-- [ ] Choose CDN (CloudFront/CloudFlare)
-- [ ] Configure CDN settings
-- [ ] Set up content distribution
+- [x] Choose CDN (CloudFront/CloudFlare)
+- [x] Configure CDN settings
+- [x] Set up content distribution
 
 ### Cloud Storage
 
@@ -74,7 +74,7 @@
 - [x] Set up JWT token management
 - [x] Create password hashing utility
 - [x] Implement role-based access control
-- [ ] Add input validation
+- [x] Add input validation
 - [ ] Configure CORS policies
 
 ## 📦 Deployment Preparation
@@ -102,7 +102,7 @@
 ## 🚧 Advanced Features
 
 - [ ] WebSocket support
-- [ ] GraphQL endpoint
+- [x] GraphQL endpoint
 - [ ] Microservices architecture (option)
 - [ ] Serverless deployment options
 
@@ -112,14 +112,18 @@
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/zkerkeb-class/back-end-projet-final-team.git
 
 # Install dependencies
 npm install
 
-# Set up environment
-cp .env.example .env
 # Edit .env with your configurations
+
+# Launch the database with docker compose. You can find the credentials for pgAdmin in ./db-compose 
+npm run dev:db
+
+# Seed the database with fake data
+npm run seed
 
 # Run development server
 npm run dev
