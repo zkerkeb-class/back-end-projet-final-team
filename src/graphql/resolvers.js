@@ -1,4 +1,4 @@
-const phoneticSearch = require('../services/phoneticSearch');
+const phoneticSearch = require('../services/phoneticSearch.service');
 
 const resolvers = {
   Query: {

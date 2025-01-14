@@ -37,8 +37,10 @@ const typeDefs = gql`
   type Track {
     id: Int!
     name: String!
-    album: String!
-    artist: String!
+    album_id: String!
+    album_name: String!
+    artist_id: String!
+    artist_name: String!
     duration: Float!
     trackNumber: Int!
     lyrics: String!
