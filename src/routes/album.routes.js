@@ -7,6 +7,7 @@ const {
   albumPlaylistSchema,
 } = require('./validations/music.validation');
 const {
+  getAlbums,
   createAlbum,
   updateAlbum,
   updateAlbumCoverArt,
@@ -30,70 +31,51 @@ const { validateImageUpload } = require('../middlewares/cdn.middleware');
  *   get:
  *     summary: Get all albums
  *     tags: [Albums]
- *     responses:
- *       200:
- *         description: List of albums retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 allOf:
- *                   - $ref: '#/components/schemas/Album'
- *                   - type: object
- *                     properties:
- *                       Artist:
- *                         $ref: '#/components/schemas/Artist'
- *                       Tracks:
- *                         type: array
- *                         items:
- *                           $ref: '#/components/schemas/Track'
- */
-//#endregion
-router.get('/', async (req, res, next) => {
-  try {
-    const albums = await albumService.findAll({
-      include: ['Artist', 'Tracks'],
-    });
-    res.json(albums);
-  } catch (error) {
-    next(error);
-  }
-});
-
-//#region
-/**
- * @swagger
- * /albums/search:
- *   get:
- *     summary: Search albums by title
- *     tags: [Albums]
  *     parameters:
  *       - in: query
- *         name: q
+ *         name: limit
  *         schema:
- *           type: string
- *         required: true
- *         description: Search query string
+ *           type: integer
+ *           default: 20
+ *         description: Number of items to retrieve
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
  *     responses:
  *       200:
- *         description: Search results retrieved successfully
+ *         description: Albums retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Album'
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Album'
+ *                 metadata:
+ *                   type: object
+ *                   properties:
+ *                     currentPage:
+ *                       type: integer
+ *                     itemsPerPage:
+ *                       type: integer
+ *                     totalItems:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *                     hasNextPage:
+ *                       type: boolean
+ *                     hasPreviousPage:
+ *                       type: boolean
+ *       500:
+ *         description: Internal server error
  */
 //#endregion
-router.get('/search', async (req, res, next) => {
-  try {
-    const albums = await albumService.searchAlbums(req.query.q);
-    res.json(albums);
-  } catch (error) {
-    next(error);
-  }
-});
+router.get('/', getAlbums);
 
 //#region
 /**

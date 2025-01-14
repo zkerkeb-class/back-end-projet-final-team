@@ -26,11 +26,30 @@ const createAlbum = async (req, res, next) => {
 
 const getAlbums = async (req, res, _next) => {
   try {
-    const albums = await Album.findAll(
-      { attributes: { exclude: ['deletedAt', 'updatedAt'] } },
-      { limit: 20 },
-    );
-    return res.status(200).send(albums);
+    const { limit = 20, page = 1 } = req.query;
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await Album.findAndCountAll({
+      attributes: {
+        exclude: ['deletedAt', 'updatedAt'],
+      },
+      limit,
+      offset,
+    });
+
+    const totalPages = Math.ceil(count / limit);
+
+    return res.status(200).send({
+      data: rows,
+      metadata: {
+        currentPage: page,
+        itemsPerPage: limit,
+        totalItems: count,
+        totalPages: totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    });
   } catch (error) {
     return res.status(500).send({ error: error.message });
   }
