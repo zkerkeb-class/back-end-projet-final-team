@@ -21,9 +21,12 @@ const resolvers = {
         case 'ARTIST':
           entity = 'artists';
           break;
+        default:
+          entity = 'all';
+          break;
       }
-      const result = await phoneticSearch.searchTracks(query, limit, entity);
-      return result.map((track) => track.title);
+      const result = await phoneticSearch.search(query, limit, entity);
+      return result;
     },
   },
   Mutation: {
