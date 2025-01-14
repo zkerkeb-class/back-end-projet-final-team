@@ -1,6 +1,8 @@
 const { gql } = require('apollo-server-express');
 
 const typeDefs = gql`
+  scalar JSON
+
   enum EntityType {
     PLAYLIST
     TITLE
@@ -12,6 +14,24 @@ const typeDefs = gql`
     query: String!
     entityType: EntityType
     limit: Int!
+  }
+
+  type ImageUrl {
+    urls: ImageUrls!
+    baseKey: String!
+  }
+
+  type ImageUrls {
+    large: ImageFormats!
+    medium: ImageFormats!
+    original: ImageFormats!
+    thumbnail: ImageFormats!
+  }
+
+  type ImageFormats {
+    png: String!
+    webp: String!
+    jpeg: String!
   }
 
   type Track {
@@ -26,6 +46,7 @@ const typeDefs = gql`
     audioFilePath: String!
     cover: String!
     popularityScore: Float!
+    image_url: JSON!
   }
 
   type Album {
@@ -39,6 +60,7 @@ const typeDefs = gql`
     totalDurationSeconds: Int!
     popularityScore: Float!
     phoneticTitle: String!
+    image_url: JSON!
   }
 
   type Artist {
@@ -46,6 +68,7 @@ const typeDefs = gql`
     name: String!
     genre: String!
     popularityScore: Float!
+    image_url: JSON!
   }
 
   type Playlist {
@@ -55,6 +78,7 @@ const typeDefs = gql`
     totalTracks: Int!
     totalDurationSeconds: Int!
     popularityScore: Float!
+    image_url: JSON!
   }
 
   type SearchResults {

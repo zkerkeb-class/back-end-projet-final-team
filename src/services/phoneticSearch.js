@@ -26,6 +26,7 @@ class PhoneticSearch {
             t.id,
             t.title AS name,
             t.phonetic_title,
+            t.cover as image_url,
             COUNT(s.keyword) AS match_count,
             SUM(levenshtein(s.keyword, t.phonetic_title)) AS total_levenshtein_distance,
             'track' AS entity_type
@@ -40,6 +41,7 @@ class PhoneticSearch {
             a.id,
             a.name,
             a.phonetic_title,
+            a.image_url,
             COUNT(s.keyword) AS match_count,
             SUM(levenshtein(s.keyword, a.phonetic_title)) AS total_levenshtein_distance,
             'artist' AS entity_type
@@ -54,6 +56,7 @@ class PhoneticSearch {
             al.id,
             al.title AS name,
             al.phonetic_title,
+            al.cover_art_url as image_url,
             COUNT(s.keyword) AS match_count,
             SUM(levenshtein(s.keyword, al.phonetic_title)) AS total_levenshtein_distance,
             'album' AS entity_type
@@ -68,6 +71,7 @@ class PhoneticSearch {
             p.id,
             p.title,
             p.phonetic_title,
+            p.cover_images as image_url,
             COUNT(s.keyword) AS match_count,
             SUM(levenshtein(s.keyword, p.phonetic_title)) AS total_levenshtein_distance,
             'playlist' AS entity_type
@@ -82,7 +86,8 @@ class PhoneticSearch {
           phonetic_title,
           match_count,
           total_levenshtein_distance,
-          entity_type
+          entity_type,
+          image_url
         FROM
           matched_entity
         ORDER BY
