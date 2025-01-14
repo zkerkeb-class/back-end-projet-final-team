@@ -1,15 +1,15 @@
-const User = require('./User.model');
-const Role = require('./Role.model');
-const Permission = require('./Permission.model');
-const Artist = require('./Artist.model');
-const Album = require('./Album.model');
-const Track = require('./Track.model');
-const Playlist = require('./Playlist.model');
-const UserRole = require('./UserRole.model');
-const AlbumArtist = require('./AlbumArtist.model');
-const PlaylistTrack = require('./PlaylistTrack.model');
-const ListeningSession = require('./ListeningSession.model');
-const AdminActionLog = require('./AdminActionLog.model');
+const User = require('./user.model');
+const Role = require('./role.model');
+const Permission = require('./permission.model');
+const Artist = require('./artist.model');
+const Album = require('./album.model');
+const Track = require('./track.model');
+const Playlist = require('./playlist.model');
+const UserRole = require('./userRole.model');
+const AlbumArtist = require('./albumArtist.model');
+const PlaylistTrack = require('./playlistTrack.model');
+const ListeningSession = require('./listeningSession.model');
+const AdminActionLog = require('./adminActionLog.model');
 
 // User Associations
 User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id' });
