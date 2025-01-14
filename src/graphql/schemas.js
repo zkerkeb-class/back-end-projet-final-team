@@ -15,6 +15,7 @@ const typeDefs = gql`
   }
 
   type Track {
+    id: Int!
     name: String!
     album: String!
     artist: String!
@@ -28,6 +29,7 @@ const typeDefs = gql`
   }
 
   type Album {
+    id: Int!
     name: String!
     releaseDate: String!
     genre: String!
@@ -40,12 +42,14 @@ const typeDefs = gql`
   }
 
   type Artist {
+    id: Int!
     name: String!
     genre: String!
     popularityScore: Float!
   }
 
   type Playlist {
+    id: Int!
     name: String!
     creator: String!
     totalTracks: Int!
