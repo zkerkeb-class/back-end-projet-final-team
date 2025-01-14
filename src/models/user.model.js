@@ -4,7 +4,7 @@ const isValidImageFormat = require('../utils/isValideImageFormat');
 
 class User extends Model {
   getProfilePictureUrl(size = 'medium', format = 'webp') {
-    const profilePicture = this.getDataValue('profile_picture');
+    const profilePicture = this.getDataValue('image_url');
     if (!profilePicture?.urls?.[size]?.[format]) {
       return null;
     }
@@ -43,25 +43,22 @@ User.init(
     },
     first_name: {
       type: DataTypes.STRING(100),
+      defaultValue: null,
     },
     last_name: {
       type: DataTypes.STRING(100),
+      defaultValue: null,
     },
-    profile_picture: {
+    image_url: {
       type: DataTypes.JSONB,
       defaultValue: null,
       validate: {
         isValidImageFormat,
       },
     },
-    profile_picture_url: {
-      type: DataTypes.VIRTUAL,
-      get() {
-        return this.getProfilePictureUrl();
-      },
-    },
     artist_id: {
       type: DataTypes.INTEGER,
+      defaultValue: null,
     },
     is_verified: {
       type: DataTypes.BOOLEAN,

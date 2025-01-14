@@ -5,12 +5,13 @@ const {
   refreshToken,
   logoutUser,
   updateProfilePicture,
+  getMe,
 } = require('../controllers/auth.controller');
 const { authenticate } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
 const { uploadImage } = require('../config/multer');
 const { validateImageUpload } = require('../middlewares/cdn.middleware');
-const parseFormData = require('../middlewares/parseFormData.middleware');
+const userExist = require('../middlewares/userExist.middleware');
 const {
   registerSchema,
   loginSchema,
@@ -43,7 +44,7 @@ const {
  *               data:
  *                 type: string
  *                 description: JSON string containing user data
- *               profile_picture:
+ *               image_url:
  *                 type: string
  *                 format: binary
  *     responses:
@@ -55,14 +56,7 @@ const {
  *               $ref: '#/components/schemas/User'
  */
 //#endregion
-router.post(
-  '/register',
-  uploadImage.single('profile_picture'),
-  parseFormData,
-  validate(registerSchema),
-  validateImageUpload,
-  registerUser,
-);
+router.post('/register', validate(registerSchema), userExist, registerUser);
 
 //#region
 /**
@@ -80,9 +74,9 @@ router.post(
  *           schema:
  *             type: object
  *             required:
- *               - profile_picture
+ *               - image_url
  *             properties:
- *               profile_picture:
+ *               image_url:
  *                 type: string
  *                 format: binary
  *     responses:
@@ -97,7 +91,7 @@ router.post(
 router.put(
   '/profile-picture',
   authenticate,
-  uploadImage.single('profile_picture'),
+  uploadImage.single('image_url'),
   validateImageUpload,
   updateProfilePicture,
 );
@@ -142,6 +136,26 @@ router.put(
  */
 //#endregion
 router.post('/login', validate(loginSchema), loginUser);
+
+//#region
+/**
+ * @swagger
+ * /auth/getMe:
+ *   get:
+ *     summary: Get user profile
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ */
+//#endregion
+router.get('/getMe', authenticate, getMe);
 
 //#region
 /**

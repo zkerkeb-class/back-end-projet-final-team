@@ -111,7 +111,7 @@ const options = {
             user_type: { $ref: '#/components/schemas/UserType' },
             first_name: { type: 'string' },
             last_name: { type: 'string' },
-            profile_picture: { $ref: '#/components/schemas/ImageFormat' },
+            image_url: { $ref: '#/components/schemas/ImageFormat' },
             profile_picture_url: { type: 'string', format: 'uri' },
             is_verified: { type: 'boolean' },
             is_active: { type: 'boolean' },

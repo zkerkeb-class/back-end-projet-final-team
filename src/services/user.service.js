@@ -15,17 +15,9 @@ class UserService extends BaseService {
     try {
       const hashedPassword = await bcrypt.hash(userData.password, 10);
 
-      let profilePicture = null;
-      if (userData.profilePictureBuffer) {
-        profilePicture = await cdnService.processProfilePicture(
-          userData.profilePictureBuffer,
-        );
-      }
-
       const user = await this.create({
         ...userData,
         password_hash: hashedPassword,
-        profile_picture: profilePicture,
       });
 
       if (userData.user_type === 'artist') {
@@ -51,14 +43,14 @@ class UserService extends BaseService {
       const user = await this.findById(userId);
 
       // Delete old profile picture if exists
-      if (user.profile_picture?.baseKey) {
-        await cdnService.deleteProfilePicture(user.profile_picture.baseKey);
+      if (user.image_url?.baseKey) {
+        await cdnService.deleteProfilePicture(user.image_url.baseKey);
       }
 
       const profilePicture =
         await cdnService.processProfilePicture(imageBuffer);
 
-      await user.update({ profile_picture: profilePicture });
+      await user.update({ image_url: profilePicture });
       return this.sanitizeUser(user);
     } catch (error) {
       throw new Error(`Failed to update profile picture: ${error.message}`);
@@ -145,6 +137,22 @@ class UserService extends BaseService {
   generateRefreshToken(user) {
     return jwt.sign({ id: user.id }, config.jwtRefreshSecret, {
       expiresIn: '7d',
+    });
+  }
+
+  getMe(userId) {
+    return this.findById(userId, {
+      include: [
+        {
+          model: Role,
+        },
+        {
+          model: Artist,
+        },
+      ],
+      attributes: {
+        exclude: ['password_hash', 'refresh_token', 'refresh_token_expires_at'],
+      },
     });
   }
 

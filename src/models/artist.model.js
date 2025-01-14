@@ -1,6 +1,7 @@
 const { GENRE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
 const { applyPhoneticTitleHook } = require('../utils/hooks');
+const isValidImageFormat = require('../utils/isValideImageFormat');
 
 class Artist extends Model {}
 
@@ -30,6 +31,13 @@ Artist.init(
     },
     phonetic_title: {
       type: DataTypes.TEXT,
+    },
+    image_url: {
+      type: DataTypes.JSONB,
+      defaultValue: null,
+      validate: {
+        isValidImageFormat,
+      },
     },
   },
   {

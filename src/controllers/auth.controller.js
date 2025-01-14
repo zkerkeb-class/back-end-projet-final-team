@@ -3,10 +3,7 @@ const { userService } = require('../services');
 const registerUser = async (req, res, next) => {
   try {
     // Add profile picture buffer to user data if image was uploaded
-    const userData = {
-      ...req.body,
-      profilePictureBuffer: req.file?.buffer,
-    };
+    const userData = req.body;
 
     const user = await userService.register(userData);
     res.status(201).json(user);
@@ -41,6 +38,15 @@ const loginUser = async (req, res, next) => {
   }
 };
 
+const getMe = async (req, res, next) => {
+  try {
+    const user = await userService.getMe(req.user.id);
+    res.json(user);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const refreshToken = async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
@@ -66,4 +72,5 @@ module.exports = {
   loginUser,
   refreshToken,
   logoutUser,
+  getMe,
 };

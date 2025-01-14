@@ -89,7 +89,7 @@ async function seedDatabase() {
             user_type: USER_TYPE.STANDARD,
             first_name: faker.person.firstName(),
             last_name: faker.person.lastName(),
-            profile_picture: defaultUrls.profile,
+            image_url: defaultUrls.profile,
             is_verified: true,
             is_active: true,
           });
@@ -115,6 +115,7 @@ async function seedDatabase() {
             genre: faker.helpers.arrayElement(Object.values(GENRE)),
             country: faker.location.country(),
             total_listeners: faker.number.int({ min: 1000, max: 1000000 }),
+            image_url: defaultUrls.profile,
           });
 
           // Create artist user account
@@ -125,7 +126,7 @@ async function seedDatabase() {
             user_type: USER_TYPE.ARTIST,
             first_name: faker.person.firstName(),
             last_name: faker.person.lastName(),
-            profile_picture: defaultUrls.profile,
+            image_url: defaultUrls.profile,
             artist_id: artist.id,
             is_verified: true,
             is_active: true,
