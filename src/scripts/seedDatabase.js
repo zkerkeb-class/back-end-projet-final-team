@@ -18,8 +18,8 @@ const initDefaultTracks = require('./initDefaultTrack');
 const { connect, sequelize } = require('../services/db.service');
 const initFuzzyMatch = require('./initFuzzyMatch');
 
-const TOTAL_USERS = 10;
-const TOTAL_ARTISTS = 5;
+const TOTAL_USERS = 30;
+const TOTAL_ARTISTS = 15;
 const ALBUMS_PER_ARTIST = 2;
 const TRACKS_PER_ALBUM = 8;
 const PLAYLISTS_PER_USER = 2;
