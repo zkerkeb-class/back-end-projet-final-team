@@ -23,9 +23,29 @@ class TrackService extends BaseService {
   async getTopTracks(limit = 10) {
     try {
       return await this.findAll({
+        attributes: [
+          'id',
+          'title',
+          'duration_seconds',
+          'genre',
+          'popularity_score',
+          'total_plays',
+          'release_date',
+          'audio_file_path',
+          'cover',
+        ],
         order: [['popularity_score', 'DESC']],
         limit,
-        include: [{ model: Artist }, { model: Album }],
+        include: [
+          {
+            model: Artist,
+            attributes: ['id', 'name', 'image_url'],
+          },
+          {
+            model: Album,
+            attributes: ['id', 'title', 'cover_art_url'],
+          },
+        ],
       });
     } catch (error) {
       throw new Error(`Error fetching top tracks: ${error.message}`);

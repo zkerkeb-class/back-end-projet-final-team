@@ -3,7 +3,11 @@ const { trackService } = require('../services');
 const { authenticate, isArtist } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
 const { trackSchema } = require('./validations/music.validation');
-const { createTrack, deleteTrack } = require('../controllers/track.controller');
+const {
+  createTrack,
+  deleteTrack,
+  getTopTracks,
+} = require('../controllers/track.controller');
 const { uploadAudio, handleMulterError } = require('../config/multer');
 const { validateImageUpload } = require('../middlewares/cdn.middleware');
 const parseFormData = require('../middlewares/parseFormData.middleware');
@@ -47,14 +51,18 @@ router.get('/', async (req, res, next) => {
  * /tracks/top:
  *   get:
  *     summary: Get top tracks by popularity
+ *     description: Retrieves a list of tracks sorted by popularity. Results are cached in Redis for improved performance.
  *     tags: [Tracks]
  *     parameters:
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
+ *           minimum: 1
+ *           maximum: 100
  *           default: 10
- *         description: Maximum number of tracks to return
+ *         required: false
+ *         description: Maximum number of tracks to return (1-100)
  *     responses:
  *       200:
  *         description: List of top tracks retrieved successfully
@@ -63,17 +71,105 @@ router.get('/', async (req, res, next) => {
  *             schema:
  *               type: array
  *               items:
- *                 $ref: '#/components/schemas/Track'
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                     description: Track unique identifier
+ *                   title:
+ *                     type: string
+ *                     description: Track title
+ *                   duration_seconds:
+ *                     type: integer
+ *                     description: Duration of the track in seconds
+ *                   genre:
+ *                     type: string
+ *                     description: Music genre
+ *                   popularity_score:
+ *                     type: number
+ *                     format: float
+ *                     description: Track popularity score (0-100)
+ *                   total_plays:
+ *                     type: integer
+ *                     description: Total number of plays
+ *                   release_date:
+ *                     type: string
+ *                     format: date
+ *                     description: Track release date
+ *                   audio_file:
+ *                     type: object
+ *                     properties:
+ *                       mp3:
+ *                         type: string
+ *                         description: MP3 file URL
+ *                       wav:
+ *                         type: string
+ *                         description: WAV file URL
+ *                       m4a:
+ *                         type: string
+ *                         description: M4A file URL
+ *                   cover:
+ *                     type: object
+ *                     properties:
+ *                       thumbnail:
+ *                         type: string
+ *                         description: Thumbnail image URL
+ *                       medium:
+ *                         type: string
+ *                         description: Medium size image URL
+ *                   artist:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         description: Artist unique identifier
+ *                       name:
+ *                         type: string
+ *                         description: Artist name
+ *                       image:
+ *                         type: string
+ *                         description: Artist profile picture URL (thumbnail)
+ *                   album:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                         description: Album unique identifier
+ *                       title:
+ *                         type: string
+ *                         description: Album title
+ *                       cover:
+ *                         type: string
+ *                         description: Album cover URL (thumbnail)
+ *             example:
+ *               - id: 61
+ *                 title: "Hurt So Good"
+ *                 duration_seconds: 128
+ *                 genre: "Pop"
+ *                 popularity_score: 96.99
+ *                 total_plays: 451575
+ *                 release_date: "2024-06-18"
+ *                 audio_file:
+ *                   mp3: "https://d3cqeg6fl6kah.cloudfront.net/tracks/default/track.mp3"
+ *                   wav: "https://d3cqeg6fl6kah.cloudfront.net/tracks/default/track.wav"
+ *                   m4a: "https://d3cqeg6fl6kah.cloudfront.net/tracks/default/track.m4a"
+ *                 cover:
+ *                   thumbnail: "https://d3cqeg6fl6kah.cloudfront.net/track-covers/1736858542071-9ffd5decbfac18bfa3ecfb9e233bef96/thumbnail.webp"
+ *                   medium: "https://d3cqeg6fl6kah.cloudfront.net/track-covers/1736858542071-9ffd5decbfac18bfa3ecfb9e233bef96/medium.webp"
+ *                 artist:
+ *                   id: 4
+ *                   name: "Domingo Kassulke V"
+ *                   image: "https://d3cqeg6fl6kah.cloudfront.net/profile-pictures/1736858536656-9d73f0463c8f48dd0dd7e958a75ac2a2/thumbnail.webp"
+ *                 album:
+ *                   id: 8
+ *                   title: "Down Under"
+ *                   cover: "https://d3cqeg6fl6kah.cloudfront.net/album-covers/1736858540343-c9c7a7012e4b994e49b189eb297307d2/thumbnail.webp"
+ *       400:
+ *         description: Invalid query parameters
+ *       500:
+ *         description: Internal server error
  */
-router.get('/top', async (req, res, next) => {
-  try {
-    const limit = parseInt(req.query.limit) || 10;
-    const tracks = await trackService.getTopTracks(limit);
-    res.json(tracks);
-  } catch (error) {
-    next(error);
-  }
-});
+router.get('/top', getTopTracks);
 
 /**
  * @swagger

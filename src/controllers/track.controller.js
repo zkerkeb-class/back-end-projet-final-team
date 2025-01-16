@@ -3,6 +3,7 @@ const cdnService = require('../services/cdn.service');
 const audioService = require('../services/audio.service');
 const path = require('path');
 const logger = require('../utils/loggerUtil');
+const redisCache = require('../services/redisCache.service');
 
 const createTrack = async (req, res, next) => {
   try {
@@ -91,7 +92,26 @@ const deleteTrack = async (req, res, next) => {
   }
 };
 
+const getTopTracks = async (req, res, next) => {
+  try {
+    const { limit } = req.query;
+    const cacheKey = `topTracks:${limit}`;
+    const cachedTracks = await redisCache.get(cacheKey);
+
+    if (cachedTracks) {
+      return res.json(cachedTracks);
+    }
+
+    const response = await trackService.getTopTracks(limit);
+    await redisCache.set(cacheKey, response);
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createTrack,
   deleteTrack,
+  getTopTracks,
 };
