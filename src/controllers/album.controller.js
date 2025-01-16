@@ -1,5 +1,6 @@
 const { Album } = require('../models');
 const { albumService } = require('../services');
+const cacheService = require('../services/redisCache.service');
 
 const createAlbum = async (req, res, next) => {
   try {
@@ -28,6 +29,13 @@ const getAlbums = async (req, res, _next) => {
   try {
     const { limit = 20, page = 1 } = req.query;
     const offset = (page - 1) * limit;
+    const cacheKey = `albums:${limit}:${offset}`;
+
+    // Check cache
+    const cachedData = await cacheService.get(cacheKey);
+    if (cachedData) {
+      return res.status(200).send(cachedData);
+    }
 
     const { count, rows } = await Album.findAndCountAll({
       attributes: {
@@ -39,7 +47,7 @@ const getAlbums = async (req, res, _next) => {
 
     const totalPages = Math.ceil(count / limit);
 
-    return res.status(200).send({
+    const response = {
       data: rows,
       metadata: {
         currentPage: page,
@@ -49,7 +57,12 @@ const getAlbums = async (req, res, _next) => {
         hasNextPage: page < totalPages,
         hasPreviousPage: page > 1,
       },
-    });
+    };
+
+    // Set cache
+    await cacheService.set(cacheKey, response);
+
+    return res.status(200).send(response);
   } catch (error) {
     return res.status(500).send({ error: error.message });
   }

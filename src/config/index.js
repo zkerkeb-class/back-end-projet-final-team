@@ -35,6 +35,8 @@ const {
   AWS_SECRET_ACCESS_KEY,
   AWS_S3_BUCKET,
   AWS_CDN_URL,
+  REDIS_HOST,
+  REDIS_PORT,
 } = process.env;
 
 if (
@@ -51,7 +53,9 @@ if (
   !AWS_ACCESS_KEY_ID,
   !AWS_SECRET_ACCESS_KEY,
   !AWS_S3_BUCKET,
-  !AWS_CDN_URL)
+  !AWS_CDN_URL,
+  !REDIS_HOST,
+  !REDIS_PORT)
 ) {
   throw new Error('Some environment variables are missing');
 }
@@ -78,6 +82,10 @@ const config = {
     secretAccessKey: AWS_SECRET_ACCESS_KEY,
     bucket: AWS_S3_BUCKET,
     cdnUrl: AWS_CDN_URL,
+  },
+  redis: {
+    host: REDIS_HOST,
+    port: REDIS_PORT,
   },
 };
 
