@@ -17,7 +17,7 @@ class PhoneticSearch {
 
     if (entity === 'all') {
       sql = `
-        WITH search_query AS (
+WITH search_query AS (
   SELECT 
     unnest(string_to_array(:phonetic_query, ' ')) AS keyword
 ),
