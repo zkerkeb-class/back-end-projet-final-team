@@ -345,7 +345,23 @@ router.post(
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Track'
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Title of the track
+ *                 example: "New Track Title"
+ *               album_id:
+ *                 type: integer
+ *                 description: ID of the album
+ *                 example: 1
+ *               genre:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   enum: [Pop, Rock, Jazz, Classical]  # Replace with actual genres from GENRE
+ *                 description: Array of genres
+ *                 example: ["Pop", "Rock"]
  *     responses:
  *       200:
  *         description: Track updated successfully
