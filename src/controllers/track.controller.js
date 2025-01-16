@@ -13,7 +13,7 @@ const createTrack = async (req, res, next) => {
     }
 
     const audioFile = req.files.audio[0];
-    const coverFile = req.files.cover?.[0];
+    const coverFile = req.files.image_url?.[0];
 
     // Process audio file
     const audioFormat = path
@@ -78,10 +78,16 @@ const deleteTrack = async (req, res, next) => {
     }
 
     // Delete audio files and cover image
-    if (track.audio_base_key) {
-      await audioService.deleteAudio(track.audio_base_key);
+    if (
+      track.audio_file_path.baseKey &&
+      !track.audio_file_path.baseKey.includes('default')
+    ) {
+      await audioService.deleteAudio(track.audio_file_path.baseKey);
     }
-    if (track.cover_image?.baseKey) {
+    if (
+      track.cover_image?.baseKey &&
+      !track.cover_image.baseKey.includes('default')
+    ) {
       await cdnService.deleteProfilePictures(track.cover_image.baseKey);
     }
 
