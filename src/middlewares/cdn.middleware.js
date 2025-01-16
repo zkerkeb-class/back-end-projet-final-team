@@ -60,7 +60,7 @@ const validateImageUpload = (req, res, next) => {
     next();
   }
 
-  const file = req.file || req.files[0] || req.files.cover[0];
+  const file = req.file || req.files[0] || req.files.image_url[0];
   const allowedMimeTypes = [
     'image/jpeg',
     'image/png',

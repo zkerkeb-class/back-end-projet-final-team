@@ -41,6 +41,11 @@ async function seedDatabase() {
 
     logger.info('Starting database seeding...');
 
+    const getRandomGenres = () => {
+      const numberOfGenres = Math.floor(Math.random() * 4) + 1; // Generate a random number between 1 and 4
+      return faker.helpers.arrayElements(Object.values(GENRE), numberOfGenres);
+    };
+
     // Create roles
     logger.info('Creating roles...');
     const roles = await Promise.all([
@@ -112,7 +117,7 @@ async function seedDatabase() {
           const artist = await Artist.create({
             name: faker.person.fullName(),
             bio: faker.lorem.paragraph(),
-            genre: faker.helpers.arrayElement(Object.values(GENRE)),
+            genre: getRandomGenres(),
             country: faker.location.country(),
             total_listeners: faker.number.int({ min: 1000, max: 1000000 }),
             image_url: defaultUrls.profile,
@@ -176,7 +181,7 @@ async function seedDatabase() {
                     duration_seconds: faker.number.int({ min: 120, max: 300 }),
                     genre: album.genre,
                     audio_file_path: defaultTrackUrl,
-                    cover: defaultUrls.track,
+                    image_url: defaultUrls.track,
                     popularity_score: faker.number.float({ min: 0, max: 100 }),
                     total_plays: faker.number.int({ min: 0, max: 1000000 }),
                     release_date: album.release_date,

@@ -1,7 +1,7 @@
-const { GENRE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
 const isValidImageFormat = require('../utils/isValideImageFormat');
 const isValidTrackFormat = require('../utils/isValidTrackFormat');
+const isValidGenre = require('../utils/isValidGenre');
 const { applyPhoneticTitleHook } = require('../utils/hooks');
 
 class Track extends Model {}
@@ -41,7 +41,9 @@ Track.init(
       type: DataTypes.TEXT,
     },
     genre: {
-      type: DataTypes.ENUM(...Object.values(GENRE)),
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      allowNull: false,
+      validate: { isValidGenre },
     },
     audio_file_path: {
       type: DataTypes.JSON,
@@ -50,7 +52,7 @@ Track.init(
         isValidTrackFormat,
       },
     },
-    cover: {
+    image_url: {
       type: DataTypes.JSONB,
       defaultValue: null,
       validate: {

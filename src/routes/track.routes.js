@@ -2,11 +2,15 @@ const router = require('express').Router();
 const { trackService } = require('../services');
 const { authenticate, isArtist } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
-const { trackSchema } = require('./validations/music.validation');
+const {
+  trackSchema,
+  trackUpdateSchema,
+} = require('./validations/music.validation');
 const {
   createTrack,
   deleteTrack,
   getTopTracks,
+  updateTrack,
 } = require('../controllers/track.controller');
 const { uploadAudio, handleMulterError } = require('../config/multer');
 const { validateImageUpload } = require('../middlewares/cdn.middleware');
@@ -312,7 +316,7 @@ router.post(
   isArtist,
   uploadAudio.fields([
     { name: 'audio', maxCount: 1 },
-    { name: 'cover', maxCount: 1 },
+    { name: 'image_url', maxCount: 1 },
   ]),
   handleMulterError,
   validateImageUpload,
@@ -358,25 +362,7 @@ router.post(
  *       404:
  *         description: Track not found
  */
-router.put('/:id', isArtist, validate(trackSchema), async (req, res, next) => {
-  try {
-    const track = await trackService.findById(req.params.id);
-
-    if (
-      track.artist_id !== req.user.artist_id &&
-      req.user.user_type !== 'admin'
-    ) {
-      return res
-        .status(403)
-        .json({ message: 'You can only update your own tracks' });
-    }
-
-    const updatedTrack = await trackService.update(req.params.id, req.body);
-    res.json(updatedTrack);
-  } catch (error) {
-    next(error);
-  }
-});
+router.put('/:id', isArtist, validate(trackUpdateSchema), updateTrack);
 
 /**
  * @swagger
@@ -398,39 +384,5 @@ router.put('/:id', isArtist, validate(trackSchema), async (req, res, next) => {
  *         description: Track deleted successfully
  */
 router.delete('/:id', isArtist, deleteTrack);
-
-/**
- * @swagger
- * /tracks/{id}/play:
- *   post:
- *     summary: Increment track play count
- *     tags: [Tracks]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *         description: Track ID
- *     responses:
- *       200:
- *         description: Track play count incremented successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Track'
- *       404:
- *         description: Track not found
- */
-router.post('/:id/play', async (req, res, next) => {
-  try {
-    const track = await trackService.incrementPlayCount(req.params.id);
-    res.json(track);
-  } catch (error) {
-    next(error);
-  }
-});
 
 module.exports = router;

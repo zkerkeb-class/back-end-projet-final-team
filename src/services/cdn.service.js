@@ -11,9 +11,11 @@ class CdnService {
     };
   }
 
-  async processImage(buffer, baseKeyPrefix) {
-    const baseKey = createUniqueId(baseKeyPrefix);
-
+  async processImage(buffer, baseKeyPrefix, defaultId = null) {
+    let baseKey = null;
+    if (defaultId) {
+      baseKey = `${baseKeyPrefix}/${defaultId}`;
+    } else baseKey = createUniqueId(baseKeyPrefix);
     const urls = {
       original: {},
       thumbnail: {},
@@ -61,20 +63,20 @@ class CdnService {
     };
   }
 
-  async processProfilePicture(buffer) {
-    return this.processImage(buffer, 'profile-pictures');
+  async processProfilePicture(buffer, baseKey = null) {
+    return this.processImage(buffer, 'profile-pictures', baseKey);
   }
 
-  async processPlaylistPicture(buffer) {
-    return this.processImage(buffer, 'playlist-pictures');
+  async processPlaylistPicture(buffer, baseKey = null) {
+    return this.processImage(buffer, 'playlist-pictures', baseKey);
   }
 
-  async processAlbumCover(buffer) {
-    return this.processImage(buffer, 'album-covers');
+  async processAlbumCover(buffer, baseKey = null) {
+    return this.processImage(buffer, 'album-covers', baseKey);
   }
 
-  async processTrackCover(buffer) {
-    return this.processImage(buffer, 'track-covers');
+  async processTrackCover(buffer, baseKey = null) {
+    return this.processImage(buffer, 'track-covers', baseKey);
   }
 
   async deleteProfilePictures(baseKey) {

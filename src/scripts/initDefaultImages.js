@@ -18,12 +18,20 @@ const defaultUrls = {
 const initDefaultImages = async () => {
   defaultUrls.profile = await cdnService.processProfilePicture(
     defaultImages.profile,
+    'default-profile',
   );
   defaultUrls.playslit = await cdnService.processPlaylistPicture(
     defaultImages.playslit,
+    'default-playlist',
   );
-  defaultUrls.album = await cdnService.processAlbumCover(defaultImages.album);
-  defaultUrls.track = await cdnService.processTrackCover(defaultImages.track);
+  defaultUrls.album = await cdnService.processAlbumCover(
+    defaultImages.album,
+    'default-album',
+  );
+  defaultUrls.track = await cdnService.processTrackCover(
+    defaultImages.track,
+    'default-track',
+  );
 
   return defaultUrls;
 };

@@ -1,5 +1,5 @@
-const { GENRE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
+const isValidGenre = require('../utils/isValidGenre');
 const isValidImageFormat = require('../utils/isValideImageFormat');
 const { applyPhoneticTitleHook } = require('../utils/hooks');
 
@@ -20,7 +20,9 @@ Album.init(
       type: DataTypes.DATEONLY,
     },
     genre: {
-      type: DataTypes.ENUM(...Object.values(GENRE)),
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      allowNull: false,
+      validate: { isValidGenre },
     },
     primary_artist_id: {
       type: DataTypes.INTEGER,

@@ -1,6 +1,6 @@
-const { GENRE } = require('./enums');
 const { sequelize, DataTypes, Model } = require('../services/db.service');
 const { applyPhoneticTitleHook } = require('../utils/hooks');
+const isValidGenre = require('../utils/isValidGenre');
 const isValidImageFormat = require('../utils/isValideImageFormat');
 
 class Artist extends Model {}
@@ -20,7 +20,8 @@ Artist.init(
       type: DataTypes.TEXT,
     },
     genre: {
-      type: DataTypes.ENUM(...Object.values(GENRE)),
+      type: DataTypes.ARRAY(DataTypes.STRING),
+      validate: { isValidGenre },
     },
     country: {
       type: DataTypes.STRING(100),

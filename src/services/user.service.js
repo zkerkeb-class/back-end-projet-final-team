@@ -23,6 +23,7 @@ class UserService extends BaseService {
       if (userData.user_type === 'artist') {
         const artist = await Artist.create({
           name: userData.username,
+          genre: userData.genre || [],
         });
         await user.update({ artist_id: artist.id });
       }

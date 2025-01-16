@@ -13,13 +13,28 @@ const trackSchema = Joi.object({
     'number.positive': 'Album ID must be positive',
   }),
 
-  genres: Joi.array()
+  genre: Joi.array()
     .items(Joi.string().valid(...Object.values(GENRE)))
     .required()
     .messages({
       'any.required': 'Genres is required',
       'any.only': 'Invalid genres',
     }),
+});
+
+const trackUpdateSchema = Joi.object({
+  title: Joi.string().required().messages({
+    'any.required': 'Title is required',
+    'string.empty': 'Title cannot be empty',
+  }),
+
+  album_id: Joi.number().integer().positive().allow(null).messages({
+    'number.base': 'Album ID must be a number',
+    'number.integer': 'Album ID must be an integer',
+    'number.positive': 'Album ID must be positive',
+  }),
+
+  genre: Joi.array().items(Joi.string().valid(...Object.values(GENRE))),
 });
 
 const albumSchema = Joi.object({
@@ -124,6 +139,7 @@ const artistSchema = Joi.object({
 
 module.exports = {
   trackSchema,
+  trackUpdateSchema,
   albumSchema,
   albumPlaylistSchema,
   playlistSchema,

@@ -42,7 +42,7 @@ const createTrack = async (req, res, next) => {
     const trackData = {
       ...req.body,
       artist_id: req.user.artist_id,
-      cover: coverResult,
+      image_url: coverResult,
       audio_file_path: audioResult,
       duration_seconds: duration,
     };
@@ -110,8 +110,35 @@ const getTopTracks = async (req, res, next) => {
   }
 };
 
+const updateTrack = async (req, res, next) => {
+  try {
+    const track = await trackService.findById(req.params.id);
+
+    if (!req.user.artist_id) {
+      return res
+        .status(403)
+        .message('You do not have permission to update this track');
+    }
+
+    if (
+      track.artist_id !== req.user.artist_id &&
+      req.user.user_type !== 'admin'
+    ) {
+      return res
+        .status(403)
+        .json({ message: 'You can only update your own tracks' });
+    }
+
+    const updatedTrack = await trackService.update(req.params.id, req.body);
+    res.json(updatedTrack);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createTrack,
   deleteTrack,
   getTopTracks,
+  updateTrack,
 };
