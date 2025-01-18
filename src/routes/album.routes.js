@@ -14,7 +14,6 @@ const {
   deleteAlbum,
 } = require('../controllers/album.controller');
 const { uploadImage } = require('../config/multer');
-const parseFormData = require('../middlewares/parseFormData.middleware');
 const { validateImageUpload } = require('../middlewares/cdn.middleware');
 
 /**
@@ -226,7 +225,7 @@ router.use(authenticate);
  *                 type: array
  *                 items:
  *                   type: integer
- *               cover_art_url:
+ *               image_url:
  *                 type: string
  *                 format: uri
  *     responses:
@@ -244,15 +243,7 @@ router.use(authenticate);
  *         description: Forbidden - Can only create albums for yourself
  */
 //#endregion
-router.post(
-  '/',
-  isArtist,
-  uploadImage.single('cover_art_url'),
-  parseFormData,
-  validate(albumSchema),
-  validateImageUpload,
-  createAlbum,
-);
+router.post('/', isArtist, validate(albumSchema), createAlbum);
 
 //#region
 /**
@@ -325,7 +316,7 @@ router.put('/:id', isArtist, validate(albumPlaylistSchema), updateAlbum);
 router.put(
   '/:id/cover',
   isArtist,
-  uploadImage.single('cover_art_url'),
+  uploadImage.single('image_url'),
   validateImageUpload,
   updateAlbumCoverArt,
 );

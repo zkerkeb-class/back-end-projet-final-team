@@ -10,9 +10,9 @@ class AlbumService extends BaseService {
 
   async createAlbum(albumData) {
     try {
-      if (albumData.cover_art_url) {
-        albumData.cover_art_url = await cdnService.processAlbumCover(
-          albumData.cover_art_url,
+      if (albumData.image_url) {
+        albumData.image_url = await cdnService.processAlbumCover(
+          albumData.image_url,
         );
       }
       const album = await this.create(albumData);
@@ -134,12 +134,12 @@ class AlbumService extends BaseService {
 
   async updateAlbumCover(album, coverArt) {
     try {
-      if (album.cover_art_url?.baseKey) {
-        await cdnService.deleteProfilePictures(album.cover_art_url.baseKey);
+      if (album.image_url?.baseKey) {
+        await cdnService.deleteProfilePictures(album.image_url.baseKey);
       }
 
       const newCoverArt = await cdnService.processAlbumCover(coverArt);
-      return await this.update(album.id, { cover_art_url: newCoverArt });
+      return await this.update(album.id, { image_url: newCoverArt });
     } catch (error) {
       throw new Error(`Error updating album cover: ${error.message}`);
     }

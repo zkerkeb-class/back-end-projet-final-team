@@ -48,12 +48,12 @@ const albumSchema = Joi.object({
     'date.base': 'Invalid release date',
   }),
 
-  genre: Joi.string()
-    .valid(...Object.values(GENRE))
+  genre: Joi.array()
+    .items(Joi.string().valid(...Object.values(GENRE)))
     .required()
     .messages({
-      'any.required': 'Genre is required',
-      'any.only': 'Invalid genre',
+      'any.required': 'Genres is required',
+      'any.only': 'Invalid genres',
     }),
 
   primary_artist_id: Joi.number().integer().positive().required().messages({
@@ -74,7 +74,7 @@ const albumSchema = Joi.object({
       'array.unique': 'Artist IDs must be unique',
     }),
 
-  cover_art_url: Joi.string().uri().allow('', null),
+  image_url: Joi.string().uri().allow('', null),
   total_tracks: Joi.number().integer().min(0).default(0),
   total_duration_seconds: Joi.number().integer().min(0).default(0),
   popularity_score: Joi.number().min(0).max(100).default(0),
@@ -83,16 +83,20 @@ const albumSchema = Joi.object({
 const albumPlaylistSchema = Joi.object({
   title: Joi.string().allow('', null),
   release_date: Joi.date().iso().allow('', null),
-  genre: Joi.string()
-    .valid(...Object.values(GENRE))
-    .allow('', null),
+  genre: Joi.array()
+    .items(Joi.string().valid(...Object.values(GENRE)))
+    .required()
+    .messages({
+      'any.required': 'Genres is required',
+      'any.only': 'Invalid genres',
+    }),
   primary_artist_id: Joi.number().integer().positive().allow('', null),
   artist_ids: Joi.array()
     .items(Joi.number().integer().positive())
     .unique()
     .min(1)
     .allow('', null),
-  cover_art_url: Joi.string().uri().allow('', null),
+  image_url: Joi.string().uri().allow('', null),
 });
 
 const playlistSchema = Joi.object({

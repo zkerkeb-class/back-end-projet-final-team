@@ -142,7 +142,7 @@ const options = {
             release_date: { type: 'string', format: 'date' },
             genre: { $ref: '#/components/schemas/Genre' },
             primary_artist_id: { type: 'integer' },
-            cover_art_url: { type: 'string', format: 'uri' },
+            image_url: { type: 'string', format: 'uri' },
             total_tracks: { type: 'integer' },
             total_duration_seconds: { type: 'integer' },
             popularity_score: { type: 'number', format: 'float' },

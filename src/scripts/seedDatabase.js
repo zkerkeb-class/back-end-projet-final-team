@@ -160,7 +160,7 @@ async function seedDatabase() {
           .fill()
           .map(async () => {
             const album = await Album.create({
-              cover_art_url: defaultUrls.album,
+              image_url: defaultUrls.album,
               title: faker.music.songName(),
               release_date: faker.date.past(),
               genre: artist.genre,

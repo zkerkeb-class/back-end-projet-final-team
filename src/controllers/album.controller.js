@@ -15,7 +15,6 @@ const createAlbum = async (req, res, next) => {
 
     const albumData = {
       ...req.body,
-      cover_art_url: req.file?.buffer,
     };
 
     const album = await albumService.createAlbum(albumData);
@@ -134,7 +133,7 @@ const deleteAlbum = async (req, res, next) => {
         .json({ message: 'You can only delete your own albums' });
     }
 
-    await albumService.deleteAlbum(req.params.id, album.cover_art_url?.baseKey);
+    await albumService.deleteAlbum(req.params.id, album.image_url.baseKey);
     res.status(204).end();
   } catch (error) {
     next(error);

@@ -43,7 +43,7 @@ class TrackService extends BaseService {
           },
           {
             model: Album,
-            attributes: ['id', 'title', 'cover_art_url'],
+            attributes: ['id', 'title', 'image_url'],
           },
         ],
       });
@@ -98,7 +98,7 @@ class TrackService extends BaseService {
           },
           {
             model: Album,
-            attributes: ['id', 'title', 'cover_art_url'],
+            attributes: ['id', 'title', 'image_url'],
           },
         ],
       });
