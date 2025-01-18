@@ -32,7 +32,7 @@ class TrackService extends BaseService {
           'total_plays',
           'release_date',
           'audio_file_path',
-          'cover',
+          'image_url',
         ],
         order: [['popularity_score', 'DESC']],
         limit,

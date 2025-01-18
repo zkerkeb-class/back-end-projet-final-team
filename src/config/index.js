@@ -37,6 +37,7 @@ const {
   AWS_CDN_URL,
   REDIS_HOST,
   REDIS_PORT,
+  REDIS_PASSWORD,
 } = process.env;
 
 if (
@@ -55,7 +56,8 @@ if (
   !AWS_S3_BUCKET,
   !AWS_CDN_URL,
   !REDIS_HOST,
-  !REDIS_PORT)
+  !REDIS_PORT,
+  !REDIS_PASSWORD)
 ) {
   throw new Error('Some environment variables are missing');
 }
@@ -86,6 +88,7 @@ const config = {
   redis: {
     host: REDIS_HOST,
     port: REDIS_PORT,
+    password: REDIS_PASSWORD,
   },
 };
 
