@@ -85,10 +85,10 @@ const deleteTrack = async (req, res, next) => {
       await audioService.deleteAudio(track.audio_file_path.baseKey);
     }
     if (
-      track.cover_image?.baseKey &&
-      !track.cover_image.baseKey.includes('default')
+      track.image_url.baseKey &&
+      !track.image_url.baseKey.includes('default')
     ) {
-      await cdnService.deleteProfilePictures(track.cover_image.baseKey);
+      await cdnService.deleteProfilePictures(track.image_url.baseKey);
     }
 
     await trackService.delete(track.id);

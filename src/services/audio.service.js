@@ -216,8 +216,7 @@ class AudioService {
 
   async deleteAudio(baseKey) {
     try {
-      const dirPath = path.join(this.audioBasePath, baseKey);
-      await fs.rm(dirPath, { recursive: true, force: true });
+      await s3Service.deleteFolder(baseKey);
     } catch (error) {
       logger.error('Error deleting audio:', error);
       throw new Error(`Failed to delete audio: ${error.message}`);

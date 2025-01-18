@@ -17,6 +17,7 @@ const initDefaultImages = require('./initDefaultImages');
 const initDefaultTracks = require('./initDefaultTrack');
 const { connect, sequelize } = require('../services/db.service');
 const initFuzzyMatch = require('./initFuzzyMatch');
+const s3Service = require('../services/s3.service');
 
 const TOTAL_USERS = 30;
 const TOTAL_ARTISTS = 15;
@@ -30,6 +31,11 @@ async function seedDatabase() {
     logger.info('Syncing database...');
     await sequelize.sync({ force: true });
     await initFuzzyMatch();
+
+    logger.info('Deleting all folders in s3...');
+    s3Service.deleteAllFolders().then(() => {
+      logger.info('All folders in s3 are deleted');
+    });
 
     logger.info('Initializing default images...');
     const defaultUrls = await initDefaultImages();

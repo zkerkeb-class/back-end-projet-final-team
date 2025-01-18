@@ -72,6 +72,44 @@ class S3Service {
     }
   }
 
+  async deleteAllFolders() {
+    try {
+      let continuationToken = undefined;
+
+      do {
+        // List all objects in the bucket
+        const listCommand = new ListObjectsV2Command({
+          Bucket: this.bucket,
+          ContinuationToken: continuationToken,
+        });
+
+        const listedObjects = await this.s3Client.send(listCommand);
+
+        if (listedObjects.Contents && listedObjects.Contents.length > 0) {
+          // Delete all listed objects
+          const deleteParams = {
+            Bucket: this.bucket,
+            Delete: { Objects: [] },
+          };
+
+          listedObjects.Contents.forEach(({ Key }) => {
+            deleteParams.Delete.Objects.push({ Key });
+          });
+
+          if (deleteParams.Delete.Objects.length > 0) {
+            const deleteCommand = new DeleteObjectsCommand(deleteParams);
+            await this.s3Client.send(deleteCommand);
+          }
+        }
+
+        continuationToken = listedObjects.NextContinuationToken;
+      } while (continuationToken);
+    } catch (error) {
+      console.error('Error deleting all folders:', error);
+      throw error;
+    }
+  }
+
   getPublicUrl(key) {
     return `${this.AWS_CDN_URL}/${key}`;
   }
