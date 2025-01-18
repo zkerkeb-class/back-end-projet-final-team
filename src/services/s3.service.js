@@ -5,6 +5,7 @@ const {
   ListObjectsV2Command,
 } = require('@aws-sdk/client-s3');
 const config = require('../config');
+const logger = require('../utils/loggerUtil');
 
 class S3Service {
   AWS_REGION = config.aws.region;
@@ -105,7 +106,7 @@ class S3Service {
         continuationToken = listedObjects.NextContinuationToken;
       } while (continuationToken);
     } catch (error) {
-      console.error('Error deleting all folders:', error);
+      logger.error('Error deleting all folders:', error);
       throw error;
     }
   }
