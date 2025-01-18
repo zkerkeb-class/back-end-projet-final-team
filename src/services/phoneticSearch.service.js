@@ -91,7 +91,7 @@ matched_entity AS (
     NULL AS artist_name,
     NULL AS album_name,
     p.phonetic_title,
-    p.cover_images as image_url,
+    p.image_url,
     COUNT(s.keyword) AS match_count,
     SUM(levenshtein(s.keyword, p.phonetic_title)) AS total_levenshtein_distance,
     'playlist' AS entity_type

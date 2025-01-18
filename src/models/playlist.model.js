@@ -34,7 +34,7 @@ Playlist.init(
       type: DataTypes.INTEGER,
       defaultValue: 0,
     },
-    cover_images: {
+    image_url: {
       type: DataTypes.JSONB,
       defaultValue: null,
       validate: {

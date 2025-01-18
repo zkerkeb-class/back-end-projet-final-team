@@ -65,7 +65,7 @@ const deletePlaylist = async (req, res, next) => {
 
     await playlistService.deletePlaylist(
       req.params.id,
-      playlist.cover_images?.baseKey,
+      playlist.image_url.baseKey,
     );
     res.status(204).end();
   } catch (error) {

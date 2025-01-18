@@ -45,14 +45,14 @@ class PlaylistService extends BaseService {
       const playlist = await this.findById(playlistId);
 
       // Delete old cover image if exists
-      if (playlist.cover_images?.baseKey) {
-        await cdnService.deleteProfilePictures(playlist.cover_images.baseKey);
+      if (playlist.image_url.baseKey) {
+        await cdnService.deleteProfilePictures(playlist.image_url.baseKey);
       }
 
       const coverImage = await cdnService.processPlaylistPicture(imageBuffer);
 
       return await this.update(playlistId, {
-        cover_images: coverImage,
+        image_url: coverImage,
       });
     } catch (error) {
       throw new Error(`Error updating playlist cover: ${error.message}`);

@@ -215,7 +215,7 @@ async function seedDatabase() {
               creator_id: user.id,
               is_public: faker.datatype.boolean(),
               total_tracks: faker.number.int({ min: 5, max: 15 }),
-              cover_images: defaultUrls.playslit,
+              image_url: defaultUrls.playslit,
             });
 
             // Add random tracks to playlist
@@ -230,7 +230,7 @@ async function seedDatabase() {
                   track_id: track.id,
                   track_order: index + 1,
                   added_at: faker.date.recent(),
-                  cover_images: defaultUrls.playslit,
+                  image_url: defaultUrls.playslit,
                 }),
               ),
             );
