@@ -178,7 +178,7 @@ const options = {
           type: 'object',
           properties: {
             id: { type: 'integer' },
-            name: { type: 'string' },
+            title: { type: 'string' },
             creator_id: { type: 'integer' },
             is_public: { type: 'boolean' },
             total_tracks: { type: 'integer' },

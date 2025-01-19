@@ -133,6 +133,26 @@ router.get('/user', async (req, res, next) => {
   }
 });
 
+//#region
+/**
+ * @swagger
+ * /playlists:
+ *   post:
+ *     summary: Create a new playlist
+ *     tags: [Playlists]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *     responses:
+ *       201:
+ *         description: Playlist created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Playlist'
+ */
+//#endregion
 router.post('/', createPlaylist);
 
 //#region
@@ -224,7 +244,7 @@ router.put(
 router.put(
   '/:id/cover',
   authenticate,
-  uploadImage.single('cover_image'),
+  uploadImage.single('image_url'),
   validateImageUpload,
   updatePlaylistCover,
 );

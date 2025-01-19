@@ -15,7 +15,7 @@ class PlaylistService extends BaseService {
       });
       return await this.create({
         creator_id: userId,
-        name: `My playlist ${numPlaylists + 1}`,
+        title: `My playlist n°${numPlaylists + 1}`,
         is_public: true,
       });
     } catch (error) {
@@ -29,7 +29,7 @@ class PlaylistService extends BaseService {
     }
     try {
       return await this.update(playlistId, {
-        name: playlistData.name,
+        title: playlistData.title,
         is_public: playlistData.is_public,
       });
     } catch (error) {
@@ -45,7 +45,7 @@ class PlaylistService extends BaseService {
       const playlist = await this.findById(playlistId);
 
       // Delete old cover image if exists
-      if (playlist.image_url.baseKey) {
+      if (playlist.image_url?.baseKey) {
         await cdnService.deleteProfilePictures(playlist.image_url.baseKey);
       }
 

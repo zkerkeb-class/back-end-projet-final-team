@@ -108,7 +108,7 @@ const playlistSchema = Joi.object({
 });
 
 const playlistUpdateSchema = Joi.object({
-  name: Joi.string().required().messages({
+  title: Joi.string().required().messages({
     'any.required': 'Name is required',
     'string.empty': 'Name cannot be empty',
   }),
