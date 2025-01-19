@@ -10,10 +10,51 @@ const typeDefs = gql`
     ARTIST
   }
 
+  input TrackFilters {
+    genres: [String]
+    minDuration: Float
+    maxDuration: Float
+    fromReleaseDate: String
+    toReleaseDate: String
+    minPopularityScore: Float
+  }
+
+  input AlbumFilters {
+    genres: [String]
+    minTracks: Float
+    maxTracks: Float
+    fromReleaseDate: String
+    toReleaseDate: String
+    minPopularityScore: Float
+  }
+
+  input ArtistFilters {
+    genres: [String]
+    minPopularityScore: Float
+  }
+
+  input PlaylistFilters {
+    minTracks: Float
+    maxTracks: Float
+    minDuration: Float
+    maxDuration: Float
+    minPopularityScore: Float
+  }
+
   input SearchInput {
     query: String!
     entityType: EntityType
     limit: Int!
+  }
+
+  input Filters {
+    query: String
+    entityType: EntityType
+    trackFilters: TrackFilters
+    albumFilters: AlbumFilters
+    artistFilters: ArtistFilters
+    limit: Int!
+    offset: Int!
   }
 
   type ImageUrl {
@@ -90,9 +131,28 @@ const typeDefs = gql`
     playlists: [Playlist]!
   }
 
+  union SearchResult = Track | Album | Artist | Playlist
+
+  type SearchResultEdge {
+    node: SearchResult!
+    type: EntityType!
+  }
+
+  type SearchResultsFiltered {
+    edges: [SearchResultEdge!]!
+    pageInfo: PageInfo!
+    totalCount: Int!
+  }
+
+  type PageInfo {
+    hasNextPage: Boolean!
+    endCursor: String!
+  }
+
   type Query {
     test: String!
     search(input: SearchInput!): SearchResults!
+    filterSearch(input: Filters!): SearchResultsFiltered!
   }
 
   type Mutation {
