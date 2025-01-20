@@ -44,6 +44,10 @@ Playlist.init(
     phonetic_title: {
       type: DataTypes.TEXT,
     },
+    popularity_score: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0,
+    },
   },
   {
     sequelize,

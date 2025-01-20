@@ -53,8 +53,9 @@ const typeDefs = gql`
     trackFilters: TrackFilters
     albumFilters: AlbumFilters
     artistFilters: ArtistFilters
-    limit: Int!
-    offset: Int!
+    playlistFilters: PlaylistFilters
+    limit: Int
+    offset: Int
   }
 
   type ImageUrl {
@@ -83,11 +84,9 @@ const typeDefs = gql`
     artist_id: String!
     artist_name: String!
     duration: Float!
-    trackNumber: Int!
-    lyrics: String!
-    genre: String!
-    audioFilePath: String!
-    cover: String!
+    lyrics: String
+    genre: [String]!
+    audioFilePath: JSON!
     popularityScore: Float!
     image_url: JSON!
   }
@@ -95,21 +94,20 @@ const typeDefs = gql`
   type Album {
     id: Int!
     name: String!
-    releaseDate: String!
-    genre: String!
-    primaryArtist: String!
+    releaseDate: String
+    genre: [String]!
+    artist_id: Int!
+    artist_name: String!
     totalTracks: Int!
-    coverArtUrl: String!
-    totalDurationSeconds: Int!
+    totalDurationSeconds: Int
     popularityScore: Float!
-    phoneticTitle: String!
     image_url: JSON!
   }
 
   type Artist {
     id: Int!
     name: String!
-    genre: String!
+    genre: [String]!
     popularityScore: Float!
     image_url: JSON!
   }
@@ -119,8 +117,8 @@ const typeDefs = gql`
     name: String!
     creator: String!
     totalTracks: Int!
-    totalDurationSeconds: Int!
-    popularityScore: Float!
+    totalDurationSeconds: Int
+    popularityScore: Float
     image_url: JSON!
   }
 

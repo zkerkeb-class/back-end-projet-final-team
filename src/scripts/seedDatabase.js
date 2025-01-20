@@ -127,6 +127,7 @@ async function seedDatabase() {
             country: faker.location.country(),
             total_listeners: faker.number.int({ min: 1000, max: 1000000 }),
             image_url: defaultUrls.profile,
+            popularity_score: faker.number.float({ min: 0, max: 100 }),
           });
 
           // Create artist user account
@@ -216,6 +217,7 @@ async function seedDatabase() {
               is_public: faker.datatype.boolean(),
               total_tracks: faker.number.int({ min: 5, max: 15 }),
               image_url: defaultUrls.playslit,
+              popularity_score: faker.number.float({ min: 0, max: 100 }),
             });
 
             // Add random tracks to playlist

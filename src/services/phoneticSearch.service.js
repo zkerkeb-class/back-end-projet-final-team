@@ -2,6 +2,8 @@ const { sequelize } = require('./db.service');
 const natural = require('natural');
 const logger = require('../utils/loggerUtil');
 const Sequelize = require('sequelize');
+const searchQueries = require('../database/search/search.queries');
+const { QueryTypes } = require('sequelize');
 
 class PhoneticSearch {
   constructor() {
@@ -173,6 +175,47 @@ LIMIT :limit;
       logger.error('Erreur lors de la recherche des titres :', err);
       throw err;
     }
+  }
+
+  async searchEntity(query, limit = 10, entity) {
+    try {
+      const results = {
+        tracks: [],
+        albums: [],
+        artists: [],
+        playlists: [],
+      };
+      const phonetic_query = this.metaphone.process(query);
+      const sql = searchQueries[entity];
+
+      if (!sql) {
+        throw new Error(`Invalid entity type: ${entity}`);
+      }
+
+      let data = await sequelize.query(sql, {
+        replacements: { phonetic_query },
+        type: QueryTypes.SELECT,
+      });
+
+      data = this.sortAndLimitResults(data, limit);
+      results[entity] = data;
+
+      return results;
+    } catch (error) {
+      logger.error(`Error in phonetic search for ${entity}:`, error);
+      throw error;
+    }
+  }
+
+  sortAndLimitResults(results, limit) {
+    return results
+      .sort((a, b) => {
+        if (b.match_count !== a.match_count) {
+          return b.match_count - a.match_count;
+        }
+        return a.total_levenshtein_distance - b.total_levenshtein_distance;
+      })
+      .slice(0, limit);
   }
 }
 

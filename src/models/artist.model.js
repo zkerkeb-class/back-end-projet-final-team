@@ -23,6 +23,10 @@ Artist.init(
       type: DataTypes.ARRAY(DataTypes.STRING),
       validate: { isValidGenre },
     },
+    popularity_score: {
+      type: DataTypes.FLOAT,
+      defaultValue: 0,
+    },
     country: {
       type: DataTypes.STRING(100),
     },

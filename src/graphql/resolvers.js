@@ -1,41 +1,83 @@
 const { logger } = require('../config/logger');
 const phoneticSearch = require('../services/phoneticSearch.service');
+const redisCacheService = require('../services/redisCache.service');
+const filteredSearchService = require('../services/filteredSearch.service');
 
 const resolvers = {
+  SearchResult: {
+    __resolveType(obj) {
+      if (obj.trackNumber !== undefined) return 'Track';
+      if (obj.totalTracks !== undefined && obj.releaseDate) return 'Album';
+      if (obj.creator !== undefined) return 'Playlist';
+      if (obj.name !== undefined && obj.genre !== undefined) return 'Artist';
+      return null;
+    },
+  },
   Query: {
     async test() {
       return 'Hello World!';
     },
     async search(_parent, args, _context, _info) {
-      const { query, entityType, limit = 10 } = args.input;
-      let entity;
-      switch (entityType) {
-        case 'PLAYLIST':
-          entity = 'playlists';
-          break;
-        case 'TITLE':
-          entity = 'tracks';
-          break;
-        case 'ALBUM':
-          entity = 'albums';
-          break;
-        case 'ARTIST':
-          entity = 'artists';
-          break;
-        default:
-          entity = 'all';
-          break;
+      try {
+        const { query, entityType, limit = 10 } = args.input;
+        const cacheKey = `search:${query}:${entityType}:${limit}`;
+        const cachedResult = await redisCacheService.get(cacheKey);
+        if (cachedResult) {
+          return cachedResult;
+        }
+
+        let entity;
+        switch (entityType) {
+          case 'PLAYLIST':
+            entity = 'playlists';
+            break;
+          case 'TITLE':
+            entity = 'tracks';
+            break;
+          case 'ALBUM':
+            entity = 'albums';
+            break;
+          case 'ARTIST':
+            entity = 'artists';
+            break;
+          default:
+            entity = 'all';
+            break;
+        }
+
+        if (entity === 'all') {
+          const result = await phoneticSearch.search(query, limit, entity);
+          await redisCacheService.set(cacheKey, result);
+          return result;
+        } else {
+          const result = await phoneticSearch.searchEntity(
+            query,
+            limit,
+            entity,
+          );
+          await redisCacheService.set(cacheKey, result);
+          return result;
+        }
+      } catch (err) {
+        logger.error('Search error: ', err);
+        throw new Error('An error occurred while performing the search');
       }
-      const result = await phoneticSearch.search(query, limit, entity);
-      return result;
     },
 
-    async filterSearch(_parent, { input }, context, _info) {
+    async filterSearch(_, { input }) {
       try {
-        // eslint-disable-next-line no-unused-vars
-        const { searchService, cache } = context;
-        // eslint-disable-next-line no-unused-vars
-        const { query, types, limit, offset } = input;
+        const cacheKey = `filteredSearch:${JSON.stringify(input)}`;
+        const cachedResult = await redisCacheService.get(cacheKey);
+        if (cachedResult) {
+          return cachedResult;
+        }
+
+        const filteredSearch = new filteredSearchService();
+        const results = await filteredSearch.filterSearch(input);
+
+        await redisCacheService.set(cacheKey, results);
+
+        return results;
       } catch (err) {
         logger.error('Search error: ', err);
         throw new Error('An error occurred while performing the search');
