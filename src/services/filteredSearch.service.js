@@ -6,6 +6,7 @@ class FilteredSearchService {
   /**
    * Build base where clause for text search including phonetic search
    */
+  // TODO: Fix the search. find out if is it name or title
   buildBaseWhereClause(query) {
     if (!query) return {};
 
