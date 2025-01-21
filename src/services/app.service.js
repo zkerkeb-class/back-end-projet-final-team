@@ -22,6 +22,61 @@ const app = express();
 const env = process.env.NODE_ENV || 'development';
 const configuredLogger = configureLogger(env);
 
+const helmetConfig = {
+  // Protection XSS de base
+  xssFilter: true,
+
+  // Désactive la détection automatique du type MIME
+  noSniff: true,
+
+  // Configuration CSP pour GraphQL et les ressources statiques
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // for graphql playground
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", 'data:', 'blob:'], // for images and avatar
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'", 'data:'],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+
+  // for clickjacking
+  frameguard: {
+    action: 'deny',
+  },
+
+  // Configuration HSTS
+  hsts: {
+    maxAge: 31536000, // 1 year
+    includeSubDomains: true,
+    preload: true,
+  },
+
+  nocache: true,
+
+  // for MIME-sniffing
+  referrerPolicy: {
+    policy: 'strict-origin-when-cross-origin',
+  },
+
+  // for cross-origin attacks
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: { policy: 'same-origin' },
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+
+  dnsPrefetchControl: {
+    allow: false,
+  },
+
+  ieNoOpen: true,
+
+  originAgentCluster: true,
+};
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -44,7 +99,7 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 };
 
-app.use(helmet());
+app.use(helmet(helmetConfig));
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(createMorganMiddleware(env));
