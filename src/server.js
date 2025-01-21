@@ -5,6 +5,8 @@ const { ApolloServer } = require('apollo-server-express');
 const typeDefs = require('./graphql/schemas');
 const resolvers = require('./graphql/resolvers');
 const redisCache = require('./services/redisCache.service');
+const webSocketService = require('./services/websocket.service');
+const responseTimeMiddleware = require('./middlewares/responseTime.middleware');
 
 const port = config.port || 8080;
 
@@ -34,12 +36,27 @@ const start = async () => {
       }
     });
 
-    app.listen(port, () => {
+    app.use(responseTimeMiddleware);
+
+    const server = app.listen(port, () => {
       logger.info(`✅ Server listening on port ${port}`);
       logger.info(
         `✅ GraphQL server ready ${config.env === 'development' ? `at ${process.env.GRAPHQL_STUDIO}` : ''}`,
       );
     });
+
+    webSocketService.initialize(server);
+
+    const gracefulShutdown = () => {
+      webSocketService.shutdown();
+      server.close(() => {
+        logger.info('Server closed');
+        process.exit(0);
+      });
+    };
+
+    process.on('SIGTERM', gracefulShutdown);
+    process.on('SIGINT', gracefulShutdown);
   } catch (err) {
     logger.error(`Error starting server: ${err.message}`);
   }

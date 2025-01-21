@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Monitoring Test</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #metrics { white-space: pre; font-family: monospace; }
+        .metric-section { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+        .error-list { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Monitoring Dashboard Test</h1>
+    
+    <div class="metric-section">
+        <h2>System Metrics</h2>
+        <div id="system-metrics"></div>
+    </div>
+
+    <div class="metric-section">
+        <h2>Response Times</h2>
+        <div id="response-times"></div>
+    </div>
+
+    <div class="metric-section">
+        <h2>Logs</h2>
+        <div id="logs"></div>
+    </div>
+
+    <script>
+        const socket = io('/admin', {
+            auth: {
+                token: 'test-token'
+            }
+        });
+
+        socket.on('connect', () => {
+            console.log('Connected to monitoring system');
+            document.body.style.backgroundColor = '#f0fff0';
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+            document.body.style.backgroundColor = '#fff0f0';
+        });
+
+        socket.on('metrics', (metrics) => {
+            document.getElementById('system-metrics').innerHTML = `
+                CPU Load: ${metrics.cpu?.load.toFixed(2)}%
+                <br>
+                Memory Used: ${metrics.memory?.usedPercent.toFixed(2)}%
+                <br>
+                Memory Free: ${(metrics.memory?.free / 1024 / 1024 / 1024).toFixed(2)} GB
+            `;
+
+            const recentTimes = metrics.responseTime.slice(-5);
+            document.getElementById('response-times').innerHTML = `
+                Last 5 response times:
+                <br>
+                ${recentTimes.map(rt => `${rt.time.toFixed(2)}ms`).join('<br>')}
+            `;
+
+            document.getElementById('logs').innerHTML = `
+                Requests per minute: ${metrics.logs.requestsPerMinute}
+                <br>
+                Success rate: ${metrics.logs.successRate}%
+                <br>
+                Total requests: ${metrics.logs.totalRequests}
+                <br>
+                Error count: ${metrics.logs.errorCount}
+                <br>
+                <div class="error-list">
+                    Recent errors:
+                    <br>
+                    ${metrics.logs.recentErrors.map(err => 
+                        `${new Date(err.timestamp).toLocaleString()} - ${err.message}`
+                    ).join('<br>')}
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html> 
