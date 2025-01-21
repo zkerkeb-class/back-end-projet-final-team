@@ -3,3 +3,4 @@ env/.env.prod
 env/.env.dev
 env/.env.test
 logs
+dist/

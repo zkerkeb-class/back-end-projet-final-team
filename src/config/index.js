@@ -20,6 +20,35 @@ switch (ENV) {
 
 dotenv.config({ path: envFile });
 
+const requiredEnvVars = [
+  'PORT',
+  'DB_HOST',
+  'DB_PORT',
+  'DB_NAME',
+  'DB_USER',
+  'DB_PASSWORD',
+  'ALLOWED_ORIGINS',
+  'JWT_SECRET',
+  'JWT_REFRESH_SECRET',
+  'AWS_REGION',
+  'AWS_ACCESS_KEY_ID',
+  'AWS_SECRET_ACCESS_KEY',
+  'AWS_S3_BUCKET',
+  'AWS_CDN_URL',
+  'REDIS_HOST',
+  'REDIS_PORT',
+  'REDIS_PASSWORD',
+  'COOKIE_SECRET',
+];
+
+const missingEnvVars = requiredEnvVars.filter((envVar) => !process.env[envVar]);
+
+if (missingEnvVars.length > 0) {
+  throw new Error(
+    `Missing environment variables: ${missingEnvVars.join(', ')}`,
+  );
+}
+
 const {
   PORT,
   DB_HOST,
