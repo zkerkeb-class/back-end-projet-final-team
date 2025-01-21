@@ -38,6 +38,7 @@ const {
   REDIS_HOST,
   REDIS_PORT,
   REDIS_PASSWORD,
+  COOKIE_SECRET,
 } = process.env;
 
 if (
@@ -57,7 +58,8 @@ if (
   !AWS_CDN_URL,
   !REDIS_HOST,
   !REDIS_PORT,
-  !REDIS_PASSWORD)
+  !REDIS_PASSWORD,
+  !COOKIE_SECRET)
 ) {
   throw new Error('Some environment variables are missing');
 }
@@ -78,6 +80,7 @@ const config = {
       : ALLOWED_ORIGINS.split(','),
   jwtSecret: JWT_SECRET,
   jwtRefreshSecret: JWT_REFRESH_SECRET,
+  cookieSecret: COOKIE_SECRET,
   aws: {
     region: AWS_REGION,
     accessKeyId: AWS_ACCESS_KEY_ID,

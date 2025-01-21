@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const csrf = require('csurf');
+const cookieParser = require('cookie-parser');
 const config = require('../config');
 const apiRouter = require('../routes');
 const swaggerUi = require('swagger-ui-express');
@@ -21,26 +23,71 @@ const app = express();
 
 const env = process.env.NODE_ENV || 'development';
 const configuredLogger = configureLogger(env);
+const isProd = env === 'production';
+
+// CSRF Configuration - only in prod
+const csrfMiddleware = csrf({
+  cookie: {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: 'strict',
+  },
+});
+
+// Middleware pour gérer la protection CSRF
+const csrfProtection = (req, res, next) => {
+  if (!isProd) {
+    return next();
+  }
+
+  // En production, appliquer la protection CSRF
+  if (req.method === 'GET' || req.path.startsWith('/api/v1/auth/')) {
+    if (req.method === 'GET' && !req.path.startsWith('/api/v1/auth/')) {
+      csrfMiddleware(req, res, () => {
+        res.cookie('XSRF-TOKEN', req.csrfToken(), {
+          httpOnly: false,
+          secure: true,
+          sameSite: 'strict',
+        });
+        next();
+      });
+    } else {
+      next();
+    }
+  } else {
+    csrfMiddleware(req, res, next);
+  }
+};
 
 const helmetConfig = {
-  // Protection XSS de base
   xssFilter: true,
 
-  // Désactive la détection automatique du type MIME
   noSniff: true,
 
-  // Configuration CSP pour GraphQL et les ressources statiques
   contentSecurityPolicy: {
     directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // for graphql playground
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", 'data:', 'blob:'], // for images and avatar
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'", 'data:'],
+      defaultSrc: ["'self'", 'https://studio.apollographql.com'],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        'https://studio.apollographql.com',
+      ],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        'https://studio.apollographql.com',
+      ],
+      imgSrc: ["'self'", 'data:', 'blob:', 'https://studio.apollographql.com'],
+      connectSrc: [
+        "'self'",
+        'https://studio.apollographql.com',
+        'wss://studio.apollographql.com', // For WebSocket connection
+      ],
+      fontSrc: ["'self'", 'data:', 'https://studio.apollographql.com'],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
+      frameSrc: ["'self'", 'https://studio.apollographql.com'],
     },
   },
 
@@ -95,15 +142,33 @@ const limiter = rateLimit({
 const corsOptions = {
   origin: config.allowedOrigins || '<http://localhost:3000>',
   optionsSuccessStatus: 200,
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'CSRF-Token'],
+  credentials: true, // Important for CSRF
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
 };
 
 app.use(helmet(helmetConfig));
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(cookieParser(config.cookieSecret));
 app.use(createMorganMiddleware(env));
 app.use(limiter);
+
+// Apply CSRF protection only in prod
+if (isProd) {
+  app.use(csrfProtection);
+
+  app.use((err, req, res, next) => {
+    if (err.code === 'EBADCSRFTOKEN') {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Invalid CSRF token',
+      });
+    }
+    next(err);
+  });
+}
+
 app.use('/api/v1', apiRouter);
 // app.use(negotiateImageFormat);
 app.use('/storage', serveImages(path.join(__dirname, '../../storage')));
