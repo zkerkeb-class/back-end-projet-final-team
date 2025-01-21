@@ -8,7 +8,7 @@ const config = require('../config');
 const apiRouter = require('../routes');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('../docs/swagger');
-const helmetConfig = require('../config/helmet');
+const helmetConfig = require('../config/helmetConf');
 const {
   serveImages,
   // negotiateImageFormat,
