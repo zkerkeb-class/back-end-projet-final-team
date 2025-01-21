@@ -7,8 +7,17 @@ class FilteredSearchService {
    * Build base where clause for text search including phonetic search
    */
   // TODO: Fix the search. find out if is it name or title
-  buildBaseWhereClause(query) {
+  buildBaseWhereClause(query, entity) {
     if (!query) return {};
+
+    if (entity === 'artists') {
+      return {
+        [Op.or]: [
+          { name: { [Op.iLike]: `%${query}%` } },
+          { phonetic_title: { [Op.iLike]: `%${query}%` } },
+        ],
+      };
+    }
 
     return {
       [Op.or]: [
@@ -174,7 +183,7 @@ class FilteredSearchService {
    * Search artists with filters
    */
   async searchArtists(query, filters = {}, limit, offset) {
-    const whereClause = this.buildBaseWhereClause(query);
+    const whereClause = this.buildBaseWhereClause(query, 'artists');
 
     if (filters.artistFilters) {
       const { genres, minPopularityScore } = filters.artistFilters;
