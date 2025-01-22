@@ -4,10 +4,12 @@ const { connect, sequelize } = require('./services/db.service');
 const { ApolloServer } = require('apollo-server-express');
 const typeDefs = require('./graphql/schemas');
 const resolvers = require('./graphql/resolvers');
-const redisCache = require('./services/redisCache.service');
+const { cacheService, client } = require('./services/redisCache.service');
 const webSocketService = require('./services/websocket.service');
 const responseTimeMiddleware = require('./middlewares/responseTime.middleware');
-
+const session = require('express-session');
+const { RedisStore } = require('connect-redis');
+const { attachUser } = require('./middlewares/auth.middleware');
 const port = config.port || 8080;
 
 const start = async () => {
@@ -28,13 +30,28 @@ const start = async () => {
     await apolloServer.start();
     apolloServer.applyMiddleware({ app });
 
-    await redisCache.isRedisReady().then((isReady) => {
+    await cacheService.isRedisReady().then((isReady) => {
       if (isReady) {
         logger.info('✅ Redis is ready');
       } else {
         logger.error('❌ Redis is not ready', isReady);
       }
     });
+    app.use(
+      session({
+        store: new RedisStore({ client }),
+        secret: config.redis.secretSession,
+        resave: false,
+        saveUninitialized: false,
+        cookie: {
+          secure: false,
+          httpOnly: true,
+          maxAge: 1000 * 60 * 60 * 24,
+        },
+      }),
+    );
+
+    app.use(attachUser);
 
     app.use(responseTimeMiddleware);
 

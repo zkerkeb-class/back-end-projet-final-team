@@ -114,4 +114,4 @@ const cacheService = {
   },
 };
 
-module.exports = cacheService;
+module.exports = { cacheService, client };

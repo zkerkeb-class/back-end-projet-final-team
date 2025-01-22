@@ -38,6 +38,7 @@ const requiredEnvVars = [
   'REDIS_HOST',
   'REDIS_PORT',
   'REDIS_PASSWORD',
+  'SECRET_SESSION',
   'COOKIE_SECRET',
 ];
 
@@ -67,6 +68,7 @@ const {
   REDIS_HOST,
   REDIS_PORT,
   REDIS_PASSWORD,
+  SECRET_SESSION,
   COOKIE_SECRET,
 } = process.env;
 
@@ -88,6 +90,7 @@ if (
   !REDIS_HOST,
   !REDIS_PORT,
   !REDIS_PASSWORD,
+  !SECRET_SESSION,
   !COOKIE_SECRET)
 ) {
   throw new Error('Some environment variables are missing');
@@ -121,6 +124,7 @@ const config = {
     host: REDIS_HOST,
     port: REDIS_PORT,
     password: REDIS_PASSWORD,
+    secretSession: SECRET_SESSION,
   },
 };
 

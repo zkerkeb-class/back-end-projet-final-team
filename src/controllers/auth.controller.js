@@ -40,8 +40,9 @@ const loginUser = async (req, res, next) => {
 
 const getMe = async (req, res, next) => {
   try {
-    const user = await userService.getMe(req.user.id);
-    res.json(user);
+    return res.json({ user: req.session.user });
+    // const user = await userService.getMe(req.user.id);
+    // res.json(user);
   } catch (error) {
     next(error);
   }

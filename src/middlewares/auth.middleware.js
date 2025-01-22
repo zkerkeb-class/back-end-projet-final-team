@@ -63,9 +63,26 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
+const authMiddleware = {
+  isAuthenticated: (req, res, next) => {
+    if (req.session && req.session.user) {
+      return next();
+    }
+    return res.status(401).json({ message: 'Non autorisé' });
+  },
+
+  attachUser: (req, res, next) => {
+    if (req.session && req.session.user) {
+      req.user = req.session.user;
+    }
+    next();
+  },
+};
+
 module.exports = {
   authenticate,
   authorize,
   isArtist,
   isAdmin,
+  ...authMiddleware,
 };
