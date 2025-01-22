@@ -16,7 +16,12 @@
     "seed": "node src/scripts/seedDatabase.js",
     "build": "webpack --config webpack.config.js --env NODE_ENV=production",
     "build:dev": "webpack --config ./webpack.config.js --env NODE_ENV=development",
-    "build:test": "webpack --config webpack.config.js --env NODE_ENV=test"
+    "build:test": "webpack --config webpack.config.js --env NODE_ENV=test",
+    "build:watch": "webpack --config webpack.config.js --watch",
+    "migrate": "sequelize-cli db:migrate",
+    "migrate:undo": "sequelize-cli db:migrate:undo",
+    "migrate:undo:all": "sequelize-cli db:migrate:undo:all",
+    "migrate:create": "sequelize-cli migration:create --name"
   },
   "husky": {
     "hooks": {
@@ -51,6 +56,7 @@
     "jest": "^29.7.0",
     "nodemon": "^3.1.7",
     "prettier": "^3.3.3",
+    "sequelize-cli": "^6.6.2",
     "supertest": "^7.0.0",
     "webpack": "^5.97.1",
     "webpack-cli": "^6.0.1",

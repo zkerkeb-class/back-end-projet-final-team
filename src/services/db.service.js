@@ -1,24 +1,11 @@
 const { Sequelize, DataTypes, Model } = require('sequelize');
 const logger = require('../utils/loggerUtil');
 const config = require('../config');
+const dbConfig = require('../config/databaseConf');
 
 const sequelize = new Sequelize(
   `postgres://${config.db.user}:${config.db.password}@${config.db.host}:${config.db.port}/${config.db.name}`,
-  {
-    dialect: 'postgres',
-    logging: (msg) => {
-      if (msg.includes('SELECT')) {
-        logger.debug(msg);
-      } else {
-        logger.info(msg);
-      }
-    },
-    define: {
-      underscored: true,
-      timestamps: true,
-      paranoid: true,
-    },
-  },
+  dbConfig[config.env],
 );
 
 const connect = async () => {
