@@ -7,10 +7,7 @@ const {
   updateProfilePicture,
   getMe,
 } = require('../controllers/auth.controller');
-const {
-  authenticate,
-  isAuthenticated,
-} = require('../middlewares/auth.middleware');
+const { authenticate } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
 const { uploadImage } = require('../config/multer');
 const { validateImageUpload } = require('../middlewares/cdn.middleware');
@@ -158,7 +155,7 @@ router.post('/login', validate(loginSchema), loginUser);
  *               $ref: '#/components/schemas/User'
  */
 //#endregion
-router.get('/getMe', isAuthenticated, getMe);
+router.get('/getMe', authenticate, getMe);
 
 //#region
 /**

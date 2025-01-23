@@ -2,15 +2,23 @@ const jwt = require('jsonwebtoken');
 const config = require('../config');
 const logger = require('../utils/loggerUtil');
 
-const generateToken = (payload, options = {}) => {
-  const defaultOptions = {
-    expiresIn: '24h',
-    audience: 'zakharmonie',
-    issuer: 'auth0',
-    ...options,
-  };
+const generateAccessToken = (user) => {
+  return jwt.sign(
+    {
+      id: user.id,
+      email: user.email,
+      user_type: user.user_type,
+      roles: user.Roles?.map((role) => role.name),
+    },
+    config.jwtSecret,
+    { expiresIn: '1h', audience: 'zakharmonie', issuer: 'auth0' },
+  );
+};
 
-  return jwt.sign(payload, config.jwtSecret, defaultOptions);
+const generateRefreshToken = (user) => {
+  return jwt.sign({ id: user.id }, config.jwtRefreshSecret, {
+    expiresIn: '7d',
+  });
 };
 
 const verifyToken = (token, options = {}) => {
@@ -28,4 +36,4 @@ const verifyToken = (token, options = {}) => {
   }
 };
 
-module.exports = { generateToken, verifyToken };
+module.exports = { generateAccessToken, verifyToken, generateRefreshToken };

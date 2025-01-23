@@ -1,6 +1,5 @@
-const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = process.env;
-const { User, Role } = require('../models');
+const { verifyToken } = require('../services/jwt.service');
+const sessionService = require('../services/session.service');
 
 const authenticate = async (req, res, next) => {
   try {
@@ -10,17 +9,14 @@ const authenticate = async (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = verifyToken(token);
 
-    const user = await User.findByPk(decoded.id, {
-      include: [{ model: Role }],
-    });
-
-    if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+    const userSession = await sessionService.getSession(decoded.id);
+    if (!userSession) {
+      return res.status(401).json({ message: 'Session expired or invalid' });
     }
 
-    req.user = user;
+    req.user = userSession;
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
@@ -63,20 +59,12 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
-const authMiddleware = {
-  isAuthenticated: (req, res, next) => {
-    if (req.session && req.session.user) {
-      return next();
-    }
-    return res.status(401).json({ message: 'Non autorisé' });
-  },
+const createSession = async (userId, userData) => {
+  return await sessionService.createSession(userId, userData);
+};
 
-  attachUser: (req, res, next) => {
-    if (req.session && req.session.user) {
-      req.user = req.session.user;
-    }
-    next();
-  },
+const destroySession = async (userId) => {
+  return await sessionService.deleteSession(userId);
 };
 
 module.exports = {
@@ -84,5 +72,6 @@ module.exports = {
   authorize,
   isArtist,
   isAdmin,
-  ...authMiddleware,
+  createSession,
+  destroySession,
 };
