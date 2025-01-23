@@ -1,6 +1,5 @@
-const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = process.env;
-const { User, Role } = require('../models');
+const { verifyToken } = require('../services/jwt.service');
+const sessionService = require('../services/session.service');
 
 const authenticate = async (req, res, next) => {
   try {
@@ -10,17 +9,14 @@ const authenticate = async (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = verifyToken(token);
 
-    const user = await User.findByPk(decoded.id, {
-      include: [{ model: Role }],
-    });
-
-    if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+    const userSession = await sessionService.getSession(decoded.id);
+    if (!userSession) {
+      return res.status(401).json({ message: 'Session expired or invalid' });
     }
 
-    req.user = user;
+    req.user = userSession;
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
@@ -63,9 +59,19 @@ const isAdmin = (req, res, next) => {
   next();
 };
 
+const createSession = async (userId, userData) => {
+  return await sessionService.createSession(userId, userData);
+};
+
+const destroySession = async (userId) => {
+  return await sessionService.deleteSession(userId);
+};
+
 module.exports = {
   authenticate,
   authorize,
   isArtist,
   isAdmin,
+  createSession,
+  destroySession,
 };

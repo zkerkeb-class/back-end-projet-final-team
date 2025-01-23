@@ -2,7 +2,6 @@ const { userService } = require('../services');
 
 const registerUser = async (req, res, next) => {
   try {
-    // Add profile picture buffer to user data if image was uploaded
     const userData = req.body;
 
     const user = await userService.register(userData);
@@ -40,8 +39,7 @@ const loginUser = async (req, res, next) => {
 
 const getMe = async (req, res, next) => {
   try {
-    const user = await userService.getMe(req.user.id);
-    res.json(user);
+    res.json(req.user);
   } catch (error) {
     next(error);
   }

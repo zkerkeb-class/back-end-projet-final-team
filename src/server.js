@@ -4,10 +4,9 @@ const { connect, sequelize } = require('./services/db.service');
 const { ApolloServer } = require('apollo-server-express');
 const typeDefs = require('./graphql/schemas');
 const resolvers = require('./graphql/resolvers');
-const redisCache = require('./services/redisCache.service');
+const { cacheService } = require('./services/redisCache.service');
 const webSocketService = require('./services/websocket.service');
 const responseTimeMiddleware = require('./middlewares/responseTime.middleware');
-
 const port = config.port || 8080;
 
 const start = async () => {
@@ -28,7 +27,7 @@ const start = async () => {
     await apolloServer.start();
     apolloServer.applyMiddleware({ app });
 
-    await redisCache.isRedisReady().then((isReady) => {
+    await cacheService.isRedisReady().then((isReady) => {
       if (isReady) {
         logger.info('✅ Redis is ready');
       } else {

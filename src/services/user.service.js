@@ -1,10 +1,13 @@
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const config = require('../config');
 const BaseService = require('./base.service');
 const { User, UserRole, Role, Artist } = require('../models');
 const { Op } = require('sequelize');
 const cdnService = require('./cdn.service');
+const { generateAccessToken, generateRefreshToken } = require('./jwt.service');
+const {
+  createSession,
+  destroySession,
+} = require('../middlewares/auth.middleware');
 
 class UserService extends BaseService {
   constructor() {
@@ -71,8 +74,8 @@ class UserService extends BaseService {
       );
       if (!isValidPassword) throw new Error('Invalid credentials');
 
-      const accessToken = this.generateAccessToken(user);
-      const refreshToken = this.generateRefreshToken(user);
+      const accessToken = generateAccessToken(user);
+      const refreshToken = generateRefreshToken(user);
 
       await this.update(user.id, {
         refresh_token: refreshToken,
@@ -82,8 +85,11 @@ class UserService extends BaseService {
         last_login: new Date(),
       });
 
+      const sanitizedUser = this.sanitizeUser(user);
+      await createSession(user.id, sanitizedUser);
+
       return {
-        user: this.sanitizeUser(user),
+        user: sanitizedUser,
         accessToken,
         refreshToken,
       };
@@ -103,7 +109,7 @@ class UserService extends BaseService {
         },
       });
 
-      const accessToken = this.generateAccessToken(user);
+      const accessToken = generateAccessToken(user);
       return { accessToken };
     } catch (error) {
       throw new Error(`Token refresh failed: ${error.message}`);
@@ -116,29 +122,13 @@ class UserService extends BaseService {
         refresh_token: null,
         refresh_token_expires_at: null,
       });
+
+      await destroySession(userId);
+
       return { message: 'Logged out successfully' };
     } catch (error) {
       throw new Error(`Logout failed: ${error.message}`);
     }
-  }
-
-  generateAccessToken(user) {
-    return jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        user_type: user.user_type,
-        roles: user.Roles?.map((role) => role.name),
-      },
-      config.jwtSecret,
-      { expiresIn: '1h' },
-    );
-  }
-
-  generateRefreshToken(user) {
-    return jwt.sign({ id: user.id }, config.jwtRefreshSecret, {
-      expiresIn: '7d',
-    });
   }
 
   getMe(userId) {
