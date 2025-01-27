@@ -1,6 +1,6 @@
 const { logger } = require('../config/logger');
 const phoneticSearch = require('../services/phoneticSearch.service');
-const redisCacheService = require('../services/redisCache.service');
+const { cacheService } = require('../services/redisCache.service');
 const filteredSearchService = require('../services/filteredSearch.service');
 
 const resolvers = {
@@ -21,7 +21,7 @@ const resolvers = {
       try {
         const { query, entityType, limit = 10 } = args.input;
         const cacheKey = `search:${query}:${entityType}:${limit}`;
-        const cachedResult = await redisCacheService.get(cacheKey);
+        const cachedResult = await cacheService.get(cacheKey);
         if (cachedResult) {
           return cachedResult;
         }
@@ -47,7 +47,7 @@ const resolvers = {
 
         if (entity === 'all') {
           const result = await phoneticSearch.search(query, limit, entity);
-          await redisCacheService.set(cacheKey, result);
+          await cacheService.set(cacheKey, result);
           return result;
         } else {
           const result = await phoneticSearch.searchEntity(
@@ -55,7 +55,7 @@ const resolvers = {
             limit,
             entity,
           );
-          await redisCacheService.set(cacheKey, result);
+          await cacheService.set(cacheKey, result);
           return result;
         }
       } catch (err) {
@@ -67,7 +67,7 @@ const resolvers = {
     async filterSearch(_, { input }) {
       try {
         const cacheKey = `filteredSearch:${JSON.stringify(input)}`;
-        const cachedResult = await redisCacheService.get(cacheKey);
+        const cachedResult = await cacheService.get(cacheKey);
         if (cachedResult) {
           return cachedResult;
         }
@@ -75,7 +75,7 @@ const resolvers = {
         const filteredSearch = new filteredSearchService();
         const results = await filteredSearch.filterSearch(input);
 
-        await redisCacheService.set(cacheKey, results);
+        await cacheService.set(cacheKey, results);
 
         return results;
       } catch (err) {
