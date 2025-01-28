@@ -46,6 +46,24 @@ export default [
     }
   },
   {
+    files: ['**/*.test.js', '**/*.spec.js', '**/tests/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        jest: 'readonly',
+      }
+    },
+    rules: {
+      'no-undef': 'off',
+      'no-unused-vars': 'off',
+    }
+  },
+  {
     ignores: [
       'node_modules/',
       'dist/',
