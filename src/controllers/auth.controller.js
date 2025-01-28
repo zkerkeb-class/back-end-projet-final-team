@@ -39,7 +39,10 @@ const loginUser = async (req, res, next) => {
 
 const getMe = async (req, res, next) => {
   try {
-    res.json(req.user);
+    if (req.user) {
+      return res.json(req.user);
+    }
+    throw new Error('User not found');
   } catch (error) {
     next(error);
   }
