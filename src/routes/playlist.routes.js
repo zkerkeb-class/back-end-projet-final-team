@@ -11,6 +11,7 @@ const validate = require('../middlewares/validation.middleware');
 const { playlistUpdateSchema } = require('./validations/music.validation');
 const { uploadImage } = require('../config/multer');
 const { validateImageUpload } = require('../middlewares/cdn.middleware');
+const { getUserPlaylists } = require('../services/playlist.service');
 
 /**
  * @swagger
@@ -94,8 +95,8 @@ router.get('/search', async (req, res, next) => {
  *       404:
  *         description: Playlist not found
  */
-//#endregion
-router.get('/:id', async (req, res, next) => {
+// #endregion
+router.get('/id/:id', async (req, res, next) => {
   try {
     const playlist = await playlistService.getPlaylistWithTracks(req.params.id);
     if (!playlist.is_public) {
@@ -126,7 +127,7 @@ router.use(authenticate);
 //#endregion
 router.get('/user', async (req, res, next) => {
   try {
-    const playlists = await playlistService.getUserPlaylists(req.user.id);
+    const playlists = await getUserPlaylists(req.user.id);
     res.json(playlists);
   } catch (error) {
     next(error);

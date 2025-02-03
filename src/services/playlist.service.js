@@ -1,6 +1,5 @@
 const BaseService = require('./base.service');
 const { Playlist, Track, Artist, Album, PlaylistTrack } = require('../models');
-const { Op } = require('sequelize');
 const cdnService = require('./cdn.service');
 
 class PlaylistService extends BaseService {
@@ -144,10 +143,8 @@ class PlaylistService extends BaseService {
 
   async getUserPlaylists(userId) {
     try {
-      return await this.findAll({
-        where: {
-          [Op.or]: [{ creator_id: userId }, { is_public: true }],
-        },
+      return await Playlist.findAll({
+        where: { creator_id: userId },
         include: [
           {
             model: Track,
@@ -157,7 +154,7 @@ class PlaylistService extends BaseService {
             },
           },
         ],
-        order: [['updated_at', 'DESC']],
+        order: [[Track, PlaylistTrack, 'track_order', 'ASC']],
       });
     } catch (error) {
       throw new Error(`Error fetching user playlists: ${error.message}`);
