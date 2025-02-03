@@ -6,26 +6,74 @@
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         #metrics { white-space: pre; font-family: monospace; }
-        .metric-section { margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+        .metric-section { margin: 20px 0; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
         .error-list { color: red; }
+        .metric-title { font-weight: bold; margin-bottom: 10px; color: #333; }
+        .metric-value { margin-left: 20px; }
+        .success { color: green; }
+        .warning { color: orange; }
+        .error { color: red; }
     </style>
 </head>
 <body>
     <h1>Monitoring Dashboard Test</h1>
     
     <div class="metric-section">
-        <h2>System Metrics</h2>
-        <div id="system-metrics"></div>
+        <h2>Métriques Système</h2>
+        <div id="system-metrics">
+            <div>
+                <div class="metric-title">CPU & Mémoire</div>
+                <div class="metric-value" id="cpu-memory"></div>
+            </div>
+            <div>
+                <div class="metric-title">Redis</div>
+                <div class="metric-value" id="redis-metrics"></div>
+            </div>
+            <div>
+                <div class="metric-title">Réseau</div>
+                <div class="metric-value" id="network-metrics"></div>
+            </div>
+            <div>
+                <div class="metric-title">Stockage</div>
+                <div class="metric-value" id="storage-metrics"></div>
+            </div>
+        </div>
     </div>
 
     <div class="metric-section">
-        <h2>Response Times</h2>
-        <div id="response-times"></div>
+        <h2>Métriques Business</h2>
+        <div id="business-metrics">
+            <div>
+                <div class="metric-title">Utilisateurs</div>
+                <div class="metric-value" id="user-metrics"></div>
+            </div>
+            <div>
+                <div class="metric-title">Streams</div>
+                <div class="metric-value" id="stream-metrics"></div>
+            </div>
+            <div>
+                <div class="metric-title">Traitement Média</div>
+                <div class="metric-value" id="processing-metrics"></div>
+            </div>
+        </div>
     </div>
 
     <div class="metric-section">
-        <h2>Logs</h2>
-        <div id="logs"></div>
+        <h2>Logs & Performance</h2>
+        <div id="performance-metrics">
+            <div>
+                <div class="metric-title">Temps de Réponse API</div>
+                <div class="metric-value" id="response-times"></div>
+            </div>
+            <div>
+                <div class="metric-title">Statistiques Requêtes</div>
+                <div class="metric-value" id="request-stats"></div>
+            </div>
+            <div>
+                <div class="metric-title">Erreurs Récentes</div>
+                <div class="metric-value error-list" id="recent-errors"></div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -46,37 +94,71 @@
         });
 
         socket.on('metrics', (metrics) => {
-            document.getElementById('system-metrics').innerHTML = `
-                CPU Load: ${metrics.cpu?.load.toFixed(2)}%
-                <br>
-                Memory Used: ${metrics.memory?.usedPercent.toFixed(2)}%
-                <br>
-                Memory Free: ${(metrics.memory?.free / 1024 / 1024 / 1024).toFixed(2)} GB
+            // CPU & Mémoire
+            document.getElementById('cpu-memory').innerHTML = `
+                CPU Load: ${metrics.cpu?.load.toFixed(2)}%<br>
+                Mémoire Utilisée: ${metrics.memory?.usedPercent.toFixed(2)}%<br>
+                Mémoire Libre: ${(metrics.memory?.free / 1024 / 1024 / 1024).toFixed(2)} GB
             `;
 
-            const recentTimes = metrics.responseTime.slice(-5);
+            // Redis
+            document.getElementById('redis-metrics').innerHTML = `
+                Latence: ${metrics.redis?.latency} ms<br>
+                Status: ${metrics.redis?.connected ? '<span class="success">Connecté</span>' : '<span class="error">Déconnecté</span>'}
+            `;
+
+            // Réseau
+            document.getElementById('network-metrics').innerHTML = `
+                Bande Passante: ${(metrics.network?.bandwidth / 1024 / 1024).toFixed(2)} MB/s<br>
+                Données Entrantes: ${(metrics.network?.bytesIn / 1024 / 1024).toFixed(2)} MB<br>
+                Données Sortantes: ${(metrics.network?.bytesOut / 1024 / 1024).toFixed(2)} MB
+            `;
+
+            // Stockage
+            document.getElementById('storage-metrics').innerHTML = `
+                Espace Total: ${(metrics.storage?.total / 1024 / 1024 / 1024).toFixed(2)} GB<br>
+                Espace Utilisé: ${(metrics.storage?.used / 1024 / 1024 / 1024).toFixed(2)} GB (${metrics.storage?.usedPercent}%)<br>
+                Espace Libre: ${(metrics.storage?.free / 1024 / 1024 / 1024).toFixed(2)} GB
+            `;
+
+            // Utilisateurs
+            document.getElementById('user-metrics').innerHTML = `
+                Utilisateurs Actifs: ${metrics.users?.active}<br>
+                Total Utilisateurs: ${metrics.users?.total}
+            `;
+
+            // Streams
+            document.getElementById('stream-metrics').innerHTML = `
+                Streams Actifs: ${metrics.streams?.active}<br>
+                Total Streams: ${metrics.streams?.total}
+            `;
+
+            // Traitement Média
+            document.getElementById('processing-metrics').innerHTML = `
+                Temps Moyen: ${metrics.processing?.averageTime.toFixed(2)} ms<br>
+                File d'Attente: ${metrics.processing?.queue}
+            `;
+
+            // Temps de Réponse
+            const recentTimes = metrics.responseTime?.slice(-5) || [];
             document.getElementById('response-times').innerHTML = `
-                Last 5 response times:
-                <br>
+                5 derniers temps de réponse:<br>
                 ${recentTimes.map(rt => `${rt.time.toFixed(2)}ms`).join('<br>')}
             `;
 
-            document.getElementById('logs').innerHTML = `
-                Requests per minute: ${metrics.logs.requestsPerMinute}
-                <br>
-                Success rate: ${metrics.logs.successRate}%
-                <br>
-                Total requests: ${metrics.logs.totalRequests}
-                <br>
-                Error count: ${metrics.logs.errorCount}
-                <br>
-                <div class="error-list">
-                    Recent errors:
-                    <br>
-                    ${metrics.logs.recentErrors.map(err => 
-                        `${new Date(err.timestamp).toLocaleString()} - ${err.message}`
-                    ).join('<br>')}
-                </div>
+            // Statistiques Requêtes
+            document.getElementById('request-stats').innerHTML = `
+                Requêtes par minute: ${metrics.logs?.requestsPerMinute}<br>
+                Taux de succès: <span class="${metrics.logs?.successRate > 95 ? 'success' : 'warning'}">${metrics.logs?.successRate}%</span><br>
+                Total requêtes: ${metrics.logs?.totalRequests}<br>
+                Nombre d'erreurs: ${metrics.logs?.errorCount}
+            `;
+
+            // Erreurs Récentes
+            document.getElementById('recent-errors').innerHTML = `
+                ${metrics.logs?.recentErrors.map(err => 
+                    `${new Date(err.timestamp).toLocaleString()} - ${err.message}`
+                ).join('<br>')}
             `;
         });
     </script>
