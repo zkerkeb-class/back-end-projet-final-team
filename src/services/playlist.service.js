@@ -192,6 +192,34 @@ class PlaylistService extends BaseService {
       throw new Error(`Error reordering tracks: ${error.message}`);
     }
   }
+
+  async addTracksToPlaylist(playlistId, trackIds) {
+    try {
+      const playlist = await this.findById(playlistId);
+      const tracks = await Track.findAll({ where: { id: trackIds } });
+
+      await Promise.all(
+        tracks.map((track) =>
+          PlaylistTrack.create({
+            playlist_id: playlistId,
+            track_id: track.id,
+            track_order: playlist.total_tracks + 1,
+          }),
+        ),
+      );
+
+      await this.update(playlistId, {
+        total_tracks: playlist.total_tracks + tracks.length,
+        total_duration_seconds:
+          playlist.total_duration_seconds +
+          tracks.reduce((acc, track) => acc + (track.duration_seconds || 0), 0),
+      });
+
+      return this.getPlaylistWithTracks(playlistId);
+    } catch (error) {
+      throw new Error(`Error adding tracks to playlist: ${error.message}`);
+    }
+  }
 }
 
 module.exports = new PlaylistService();

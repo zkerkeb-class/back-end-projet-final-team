@@ -292,15 +292,20 @@ router.post('/:id/tracks', async (req, res, next) => {
   try {
     const playlist = await playlistService.findById(req.params.id);
 
-    if (playlist.creator_id !== req.user.id) {
+    if (playlist.creator_id !== req.user.id && req.user.user_type !== 'admin') {
       return res
         .status(403)
-        .json({ message: 'You can only modify your own playlists' });
+        .json({ message: 'You can only add tracks to your own playlist' });
     }
 
-    const updatedPlaylist = await playlistService.addTrack(
+    const { trackIds } = req.body;
+    if (!Array.isArray(trackIds)) {
+      return res.status(400).json({ message: 'trackIds must be an array' });
+    }
+
+    const updatedPlaylist = await playlistService.addTracksToPlaylist(
       req.params.id,
-      req.body.track_id,
+      trackIds,
     );
     res.json(updatedPlaylist);
   } catch (error) {
