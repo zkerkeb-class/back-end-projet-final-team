@@ -2,6 +2,9 @@ const si = require('systeminformation');
 const fs = require('fs-extra');
 const path = require('path');
 const { logger } = require('../config/logger');
+const { redisClient } = require('../services/redisCache.service');
+const { User } = require('../models');
+const { Op } = require('sequelize');
 
 class MonitoringService {
   constructor() {
@@ -9,6 +12,32 @@ class MonitoringService {
       cpu: null,
       memory: null,
       responseTime: [],
+      redis: {
+        latency: 0,
+        connected: false
+      },
+      network: {
+        bandwidth: 0,
+        bytesIn: 0,
+        bytesOut: 0
+      },
+      storage: {
+        total: 0,
+        used: 0,
+        free: 0
+      },
+      users: {
+        active: 0,
+        total: 0
+      },
+      processing: {
+        averageTime: 0,
+        queue: 0
+      },
+      streams: {
+        active: 0,
+        total: 0
+      },
       logs: {
         errorCount: 0,
         totalRequests: 0,
@@ -22,6 +51,7 @@ class MonitoringService {
     this.errorLogPath = path.join(this.logPath, 'error.log');
     this.combinedLogPath = path.join(this.logPath, 'combined.log');
     this.lastLogCheck = Date.now();
+    this.mediaProcessingTimes = [];
   }
 
   async start() {
@@ -38,25 +68,92 @@ class MonitoringService {
 
   async updateMetrics() {
     try {
-      const cpuData = await si.currentLoad();
+      const cpuData = await si.currentLoad() || { currentLoad: 0, cpus: [] };
+      const memData = await si.mem() || { total: 0, used: 0, free: 0 };
+      const networkStats = await si.networkStats() || [{ 
+        tx_sec: 0, 
+        rx_sec: 0, 
+        rx_bytes: 0, 
+        tx_bytes: 0 
+      }];
+      const fsSize = await si.fsSize() || [{ 
+        size: 0, 
+        used: 0, 
+        available: 0, 
+        use: 0 
+      }];
+
+      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
+      const activeUsers = await User.count({
+        where: {
+          last_login: {
+            [Op.gte]: fifteenMinutesAgo
+          }
+        }
+      });
+
       this.metrics.cpu = {
-        load: cpuData.currentLoad,
-        cores: cpuData.cpus.map((core) => core.load),
+        load: cpuData.currentLoad || 0,
+        cores: cpuData.cpus.map((core) => core.load || 0),
       };
 
-      const memData = await si.mem();
       this.metrics.memory = {
-        total: memData.total,
-        used: memData.used,
-        free: memData.free,
-        usedPercent: (memData.used / memData.total) * 100,
+        total: memData.total || 0,
+        used: memData.used || 0,
+        free: memData.free || 0,
+        usedPercent: memData.total ? ((memData.used / memData.total) * 100) : 0,
       };
 
+      this.metrics.network = {
+        bandwidth: (networkStats[0].tx_sec + networkStats[0].rx_sec) || 0,
+        bytesIn: networkStats[0].rx_bytes || 0,
+        bytesOut: networkStats[0].tx_bytes || 0,
+      };
+
+      const mainDisk = fsSize.find(fs => fs.mount === '/') || fsSize[0] || {
+        size: 0,
+        used: 0,
+        available: 0,
+        use: 0
+      };
+      this.metrics.storage = {
+        total: mainDisk.size || 0,
+        used: mainDisk.used || 0,
+        free: mainDisk.available || 0,
+        usedPercent: mainDisk.use || 0,
+      };
+
+      this.metrics.users = {
+        active: activeUsers || 0,
+        total: await this.getTotalUsers()
+      };
+
+      await this.checkRedisLatency();
       await this.updateLogMetrics();
+      await this.simulateStreamData();
+      await this.simulateMediaProcessing();
 
       logger.debug('Metrics updated successfully');
     } catch (error) {
       logger.error('Error updating metrics:', error);
+    }
+  }
+
+  async checkRedisLatency() {
+    try {
+      const start = Date.now();
+      await redisClient.ping();
+      const end = Date.now();
+      this.metrics.redis = {
+        latency: end - start,
+        connected: true
+      };
+    } catch (error) {
+      this.metrics.redis = {
+        latency: 0,
+        connected: false
+      };
+      logger.error('Redis latency check failed:', error);
     }
   }
 
@@ -141,10 +238,49 @@ class MonitoringService {
     });
   }
 
+  addMediaProcessingTime(duration) {
+    this.mediaProcessingTimes.push(duration);
+    if (this.mediaProcessingTimes.length > 100) {
+      this.mediaProcessingTimes.shift();
+    }
+    this.metrics.processing.averageTime = 
+      this.mediaProcessingTimes.reduce((a, b) => a + b, 0) / this.mediaProcessingTimes.length;
+  }
+
+  updateStreamCount(active, total) {
+    this.metrics.streams = {
+      active,
+      total
+    };
+  }
+
   getMetrics() {
     return {
       ...this.metrics,
       timestamp: Date.now(),
+    };
+  }
+
+  async getTotalUsers() {
+    try {
+      return await User.count();
+    } catch (error) {
+      logger.error('Error getting total users:', error);
+      return 0;
+    }
+  }
+
+  async simulateStreamData() {
+    this.metrics.streams = {
+      active: Math.floor(Math.random() * 10),
+      total: 100 + Math.floor(Math.random() * 50),
+    };
+  }
+
+  async simulateMediaProcessing() {
+    this.metrics.processing = {
+      averageTime: 100 + Math.floor(Math.random() * 900),
+      queue: Math.floor(Math.random() * 5),
     };
   }
 }

@@ -46,7 +46,7 @@ const authorize = (...allowedRoles) => {
 };
 
 const isArtist = (req, res, next) => {
-  if (req.user.user_type !== 'artist') {
+  if (req.user.user_type === 'standard') {
     return res.status(403).json({ message: 'Artist access required' });
   }
   next();
