@@ -123,7 +123,7 @@ class PlaylistService extends BaseService {
 
   async getPlaylistWithTracks(playlistId) {
     try {
-      return await this.findOne({
+      const playlists = await this.findOne({
         where: { id: playlistId },
         include: [
           {
@@ -136,6 +136,11 @@ class PlaylistService extends BaseService {
         ],
         order: [[Track, PlaylistTrack, 'track_order', 'ASC']],
       });
+
+      const plainPlaylist = playlists.get({ plain: true });
+      plainPlaylist.tracks = plainPlaylist.Tracks;
+      delete plainPlaylist.Tracks;
+      return plainPlaylist;
     } catch (error) {
       throw new Error(`Error fetching playlist with tracks: ${error.message}`);
     }
