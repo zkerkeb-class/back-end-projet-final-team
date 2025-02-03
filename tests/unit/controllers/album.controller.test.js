@@ -1,5 +1,5 @@
 const { albumService } = require('../../../src/services');
-const cacheService = require('../../../src/services/redisCache.service');
+const { cacheService } = require('../../../src/services/redisCache.service');
 const { Album } = require('../../../src/models');
 const {
   createAlbum,

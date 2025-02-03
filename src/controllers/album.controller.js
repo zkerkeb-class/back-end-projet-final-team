@@ -1,6 +1,6 @@
 const { Album } = require('../models');
 const { albumService } = require('../services');
-const cacheService = require('../services/redisCache.service');
+const { cacheService } = require('../services/redisCache.service');
 
 const createAlbum = async (req, res, next) => {
   try {
