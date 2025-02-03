@@ -57,7 +57,7 @@ class ArtistService extends BaseService {
           },
           {
             model: User,
-            attributes: ['id', 'username', 'email', 'profile_picture_url'],
+            attributes: ['id', 'username', 'email', 'image_url'],
           },
         ],
       });
