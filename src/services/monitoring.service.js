@@ -2,7 +2,7 @@ const si = require('systeminformation');
 const fs = require('fs-extra');
 const path = require('path');
 const { logger } = require('../config/logger');
-const { redisClient } = require('../services/redisCache.service');
+const { client: redisClient } = require('../services/redisCache.service');
 const { User } = require('../models');
 const { Op } = require('sequelize');
 
@@ -14,29 +14,29 @@ class MonitoringService {
       responseTime: [],
       redis: {
         latency: 0,
-        connected: false
+        connected: false,
       },
       network: {
         bandwidth: 0,
         bytesIn: 0,
-        bytesOut: 0
+        bytesOut: 0,
       },
       storage: {
         total: 0,
         used: 0,
-        free: 0
+        free: 0,
       },
       users: {
         active: 0,
-        total: 0
+        total: 0,
       },
       processing: {
         averageTime: 0,
-        queue: 0
+        queue: 0,
       },
       streams: {
         active: 0,
-        total: 0
+        total: 0,
       },
       logs: {
         errorCount: 0,
@@ -68,28 +68,32 @@ class MonitoringService {
 
   async updateMetrics() {
     try {
-      const cpuData = await si.currentLoad() || { currentLoad: 0, cpus: [] };
-      const memData = await si.mem() || { total: 0, used: 0, free: 0 };
-      const networkStats = await si.networkStats() || [{ 
-        tx_sec: 0, 
-        rx_sec: 0, 
-        rx_bytes: 0, 
-        tx_bytes: 0 
-      }];
-      const fsSize = await si.fsSize() || [{ 
-        size: 0, 
-        used: 0, 
-        available: 0, 
-        use: 0 
-      }];
+      const cpuData = (await si.currentLoad()) || { currentLoad: 0, cpus: [] };
+      const memData = (await si.mem()) || { total: 0, used: 0, free: 0 };
+      const networkStats = (await si.networkStats()) || [
+        {
+          tx_sec: 0,
+          rx_sec: 0,
+          rx_bytes: 0,
+          tx_bytes: 0,
+        },
+      ];
+      const fsSize = (await si.fsSize()) || [
+        {
+          size: 0,
+          used: 0,
+          available: 0,
+          use: 0,
+        },
+      ];
 
       const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
       const activeUsers = await User.count({
         where: {
           last_login: {
-            [Op.gte]: fifteenMinutesAgo
-          }
-        }
+            [Op.gte]: fifteenMinutesAgo,
+          },
+        },
       });
 
       this.metrics.cpu = {
@@ -101,20 +105,21 @@ class MonitoringService {
         total: memData.total || 0,
         used: memData.used || 0,
         free: memData.free || 0,
-        usedPercent: memData.total ? ((memData.used / memData.total) * 100) : 0,
+        usedPercent: memData.total ? (memData.used / memData.total) * 100 : 0,
       };
 
       this.metrics.network = {
-        bandwidth: (networkStats[0].tx_sec + networkStats[0].rx_sec) || 0,
+        bandwidth: networkStats[0].tx_sec + networkStats[0].rx_sec || 0,
         bytesIn: networkStats[0].rx_bytes || 0,
         bytesOut: networkStats[0].tx_bytes || 0,
       };
 
-      const mainDisk = fsSize.find(fs => fs.mount === '/') || fsSize[0] || {
+      const mainDisk = fsSize.find((fs) => fs.mount === '/') ||
+        fsSize[0] || {
         size: 0,
         used: 0,
         available: 0,
-        use: 0
+        use: 0,
       };
       this.metrics.storage = {
         total: mainDisk.size || 0,
@@ -125,7 +130,7 @@ class MonitoringService {
 
       this.metrics.users = {
         active: activeUsers || 0,
-        total: await this.getTotalUsers()
+        total: await this.getTotalUsers(),
       };
 
       await this.checkRedisLatency();
@@ -146,12 +151,12 @@ class MonitoringService {
       const end = Date.now();
       this.metrics.redis = {
         latency: end - start,
-        connected: true
+        connected: true,
       };
     } catch (error) {
       this.metrics.redis = {
         latency: 0,
-        connected: false
+        connected: false,
       };
       logger.error('Redis latency check failed:', error);
     }
@@ -243,14 +248,15 @@ class MonitoringService {
     if (this.mediaProcessingTimes.length > 100) {
       this.mediaProcessingTimes.shift();
     }
-    this.metrics.processing.averageTime = 
-      this.mediaProcessingTimes.reduce((a, b) => a + b, 0) / this.mediaProcessingTimes.length;
+    this.metrics.processing.averageTime =
+      this.mediaProcessingTimes.reduce((a, b) => a + b, 0) /
+      this.mediaProcessingTimes.length;
   }
 
   updateStreamCount(active, total) {
     this.metrics.streams = {
       active,
-      total
+      total,
     };
   }
 
