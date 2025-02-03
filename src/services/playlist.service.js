@@ -143,7 +143,7 @@ class PlaylistService extends BaseService {
 
   async getUserPlaylists(userId) {
     try {
-      return await Playlist.findAll({
+      const playlists = await Playlist.findAll({
         where: { creator_id: userId },
         include: [
           {
@@ -155,6 +155,13 @@ class PlaylistService extends BaseService {
           },
         ],
         order: [[Track, PlaylistTrack, 'track_order', 'ASC']],
+      });
+
+      return playlists.map((playlist) => {
+        const plainPlaylist = playlist.get({ plain: true });
+        plainPlaylist.tracks = plainPlaylist.Tracks;
+        delete plainPlaylist.Tracks;
+        return plainPlaylist;
       });
     } catch (error) {
       throw new Error(`Error fetching user playlists: ${error.message}`);
