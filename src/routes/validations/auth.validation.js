@@ -23,7 +23,7 @@ const registerSchema = Joi.object({
 
   first_name: Joi.string().allow('', null),
   last_name: Joi.string().allow('', null),
-  profile_picture_url: Joi.string().uri().allow('', null),
+  image_url: Joi.string().uri().allow('', null),
 });
 
 const loginSchema = Joi.object({
