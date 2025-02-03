@@ -20,11 +20,13 @@ const resolvers = {
     async search(_parent, args, _context, _info) {
       try {
         const { query, entityType, limit = 10 } = args.input;
-        const cacheKey = `search:${query}:${entityType}:${limit}`;
-        const cachedResult = await cacheService.get(cacheKey);
-        if (cachedResult) {
-          return cachedResult;
-        }
+        const cacheKey = `search:${query}:${entityType}:${limit}:${JSON.stringify(
+          args,
+        )}`;
+        // const cachedResult = await cacheService.get(cacheKey);
+        // if (cachedResult) {
+        //   return cachedResult;
+        // }
 
         let entity;
         switch (entityType) {
