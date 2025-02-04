@@ -3,7 +3,6 @@ const natural = require('natural');
 const logger = require('../utils/loggerUtil');
 const Sequelize = require('sequelize');
 const searchQueries = require('../database/search/search.queries');
-const phoneticSearchQueries = require('../database/search/phoneticSearch.queries');
 const { QueryTypes } = require('sequelize');
 const {
   trackSearchQuery,

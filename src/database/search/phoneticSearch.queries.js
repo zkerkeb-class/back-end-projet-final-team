@@ -58,51 +58,55 @@ const artistSearchQuery = `
 `;
 
 const albumSearchQuery = `
-  WITH search_query AS (
-    SELECT unnest(string_to_array(:phonetic_query, ' ')) AS keyword
-  )
-  SELECT
-    al.id,
-    al.title AS name,
-    NULL AS artist_id,
-    NULL AS album_id,
-    NULL AS artist_name,
-    NULL AS album_name,
-    al.phonetic_title,
-    al.image_url,
-    NULL AS audioFilePath,
-    COUNT(s.keyword) AS match_count,
-    SUM(levenshtein(s.keyword, al.phonetic_title)) AS total_levenshtein_distance,
-    'album' AS entity_type
-  FROM albums al
-  JOIN search_query s ON al.phonetic_title ILIKE '%' || s.keyword || '%'
-  GROUP BY al.id, al.title, al.phonetic_title, al.image_url
-  ORDER BY match_count DESC, total_levenshtein_distance ASC
-  LIMIT :limit
-`;
+WITH search_query AS (
+      SELECT unnest(string_to_array(:phonetic_query, ' ')) AS keyword
+    ),
+    matched_albums AS (
+      SELECT
+        al.id,
+        al.title as name,
+        al.genre,
+        al.primary_artist_id as artist_id,
+        a.name as artist_name,
+        al.phonetic_title,
+        al.release_date,
+        al.total_tracks,
+        al.popularity_score as popularityScore,
+        a.name as artist_name,
+        COUNT(s.keyword) AS match_count,
+        SUM(levenshtein(s.keyword, al.phonetic_title)) AS total_levenshtein_distance
+      FROM albums al
+      JOIN search_query s ON al.phonetic_title ILIKE '%' || s.keyword || '%'
+      LEFT JOIN artists a ON al.primary_artist_id = a.id
+      GROUP BY al.id, al.title, al.phonetic_title, al.release_date, 
+               al.total_tracks, a.name
+    )
+    SELECT * FROM matched_albums
+  `;
 
 const playlistSearchQuery = `
   WITH search_query AS (
-    SELECT unnest(string_to_array(:phonetic_query, ' ')) AS keyword
-  )
-  SELECT
-    p.id,
-    p.title AS name,
-    NULL AS artist_id,
-    NULL AS album_id,
-    NULL AS artist_name,
-    NULL AS album_name,
-    p.phonetic_title,
-    p.image_url,
-    NULL AS audioFilePath,
-    COUNT(s.keyword) AS match_count,
-    SUM(levenshtein(s.keyword, p.phonetic_title)) AS total_levenshtein_distance,
-    'playlist' AS entity_type
-  FROM playlists p
-  JOIN search_query s ON p.phonetic_title ILIKE '%' || s.keyword || '%'
-  GROUP BY p.id, p.title, p.phonetic_title, p.image_url
-  ORDER BY match_count DESC, total_levenshtein_distance ASC
-  LIMIT :limit
+      SELECT unnest(string_to_array(:phonetic_query, ' ')) AS keyword
+    ),
+    matched_playlists AS (
+      SELECT
+        p.id,
+        p.title as name,
+        p.phonetic_title,
+        p.total_tracks as totalTracks,
+        p.total_duration_seconds as TotalDurationSeconds,
+        p.popularity_score as popularityScore,
+        p.image_url,
+        u.username as creator_name,
+        COUNT(s.keyword) AS match_count,
+        SUM(levenshtein(s.keyword, p.phonetic_title)) AS total_levenshtein_distance
+      FROM playlists p
+      JOIN search_query s ON p.phonetic_title ILIKE '%' || s.keyword || '%'
+      LEFT JOIN users u ON p.creator_id = u.id
+      GROUP BY p.id, p.title, p.phonetic_title, p.total_tracks, 
+               p.total_duration_seconds, p.popularity_score, u.username
+    )
+    SELECT * FROM matched_playlists
 `;
 
 module.exports = {

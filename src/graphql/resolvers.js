@@ -23,10 +23,10 @@ const resolvers = {
         const cacheKey = `search:${query}:${entityType}:${limit}:${JSON.stringify(
           args,
         )}`;
-        // const cachedResult = await cacheService.get(cacheKey);
-        // if (cachedResult) {
-        //   return cachedResult;
-        // }
+        const cachedResult = await cacheService.get(cacheKey);
+        if (cachedResult) {
+          return cachedResult;
+        }
 
         let entity;
         switch (entityType) {
