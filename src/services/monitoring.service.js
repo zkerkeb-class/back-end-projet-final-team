@@ -138,7 +138,7 @@ class MonitoringService {
       await this.simulateStreamData();
       await this.simulateMediaProcessing();
 
-      logger.debug('Metrics updated successfully');
+      // logger.debug('Metrics updated successfully');
     } catch (error) {
       logger.error('Error updating metrics:', error);
     }

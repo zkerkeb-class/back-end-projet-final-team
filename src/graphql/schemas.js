@@ -86,7 +86,7 @@ const typeDefs = gql`
     duration: Float!
     lyrics: String
     genre: [String]!
-    audioFilePath: JSON!
+    audiofilepath: JSON!
     popularityScore: Float!
     image_url: JSON!
   }
