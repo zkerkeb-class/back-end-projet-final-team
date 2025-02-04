@@ -9,9 +9,20 @@ const { Op } = require('sequelize');
 class MonitoringService {
   constructor() {
     this.metrics = {
-      cpu: null,
-      memory: null,
-      responseTime: [],
+      cpu: {
+        load: 0,
+        cores: []
+      },
+      memory: {
+        total: 0,
+        used: 0,
+        free: 0,
+        usedPercent: 0
+      },
+      responseTime: {
+        average: 0,
+        values: []
+      },
       redis: {
         latency: 0,
         connected: false
@@ -24,7 +35,8 @@ class MonitoringService {
       storage: {
         total: 0,
         used: 0,
-        free: 0
+        free: 0,
+        usedPercent: 0
       },
       users: {
         active: 0,
@@ -55,6 +67,7 @@ class MonitoringService {
   }
 
   async start() {
+    logger.info('Starting monitoring service');
     this.interval = setInterval(async () => {
       await this.updateMetrics();
     }, this.updateInterval);
@@ -68,21 +81,45 @@ class MonitoringService {
 
   async updateMetrics() {
     try {
-      const cpuData = await si.currentLoad() || { currentLoad: 0, cpus: [] };
-      const memData = await si.mem() || { total: 0, used: 0, free: 0 };
-      const networkStats = await si.networkStats() || [{ 
-        tx_sec: 0, 
-        rx_sec: 0, 
-        rx_bytes: 0, 
-        tx_bytes: 0 
-      }];
-      const fsSize = await si.fsSize() || [{ 
-        size: 0, 
-        used: 0, 
-        available: 0, 
-        use: 0 
-      }];
+      // CPU
+      const cpuData = await si.currentLoad();
+      this.metrics.cpu = {
+        load: cpuData.currentLoad || 0,
+        cores: cpuData.cpus.map(core => core.load || 0)
+      };
 
+      // Mémoire
+      const memData = await si.mem();
+      this.metrics.memory = {
+        total: memData.total || 0,
+        used: memData.used || 0,
+        free: memData.free || 0,
+        usedPercent: ((memData.used / memData.total) * 100) || 0
+      };
+
+      // Réseau
+      const networkStats = await si.networkStats();
+      const mainNetwork = networkStats[0] || {};
+      this.metrics.network = {
+        bandwidth: (mainNetwork.tx_sec + mainNetwork.rx_sec) || 0,
+        bytesIn: mainNetwork.rx_bytes || 0,
+        bytesOut: mainNetwork.tx_bytes || 0
+      };
+
+      // Stockage
+      const fsSize = await si.fsSize();
+      const mainDisk = fsSize[0] || {};
+      this.metrics.storage = {
+        total: mainDisk.size || 0,
+        used: mainDisk.used || 0,
+        free: mainDisk.available || 0,
+        usedPercent: mainDisk.use || 0
+      };
+
+      // Redis
+      await this.checkRedisLatency();
+
+      // Utilisateurs actifs (15 dernières minutes)
       const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000);
       const activeUsers = await User.count({
         where: {
@@ -92,50 +129,39 @@ class MonitoringService {
         }
       });
 
-      this.metrics.cpu = {
-        load: cpuData.currentLoad || 0,
-        cores: cpuData.cpus.map((core) => core.load || 0),
-      };
-
-      this.metrics.memory = {
-        total: memData.total || 0,
-        used: memData.used || 0,
-        free: memData.free || 0,
-        usedPercent: memData.total ? ((memData.used / memData.total) * 100) : 0,
-      };
-
-      this.metrics.network = {
-        bandwidth: (networkStats[0].tx_sec + networkStats[0].rx_sec) || 0,
-        bytesIn: networkStats[0].rx_bytes || 0,
-        bytesOut: networkStats[0].tx_bytes || 0,
-      };
-
-      const mainDisk = fsSize.find(fs => fs.mount === '/') || fsSize[0] || {
-        size: 0,
-        used: 0,
-        available: 0,
-        use: 0
-      };
-      this.metrics.storage = {
-        total: mainDisk.size || 0,
-        used: mainDisk.used || 0,
-        free: mainDisk.available || 0,
-        usedPercent: mainDisk.use || 0,
-      };
+      const totalUsers = await User.count();
 
       this.metrics.users = {
         active: activeUsers || 0,
-        total: await this.getTotalUsers()
+        total: totalUsers || 0
       };
 
-      await this.checkRedisLatency();
-      await this.updateLogMetrics();
-      await this.simulateStreamData();
-      await this.simulateMediaProcessing();
+      // Simulation de données pour le développement
+      if (process.env.NODE_ENV !== 'production') {
+        this.metrics.streams = {
+          active: Math.floor(Math.random() * 10),
+          total: Math.floor(Math.random() * 100)
+        };
+        
+        this.metrics.processing = {
+          averageTime: Math.random() * 1000,
+          queue: Math.floor(Math.random() * 5)
+        };
 
-      logger.debug('Metrics updated successfully');
+        this.metrics.logs = {
+          errorCount: Math.floor(Math.random() * 10),
+          totalRequests: Math.floor(Math.random() * 1000),
+          recentErrors: [],
+          requestsPerMinute: Math.floor(Math.random() * 60),
+          successRate: 90 + Math.random() * 10
+        };
+      }
+
+      logger.debug('Metrics updated successfully:', this.metrics);
+      return this.metrics;
     } catch (error) {
       logger.error('Error updating metrics:', error);
+      return this.metrics;
     }
   }
 
@@ -232,10 +258,11 @@ class MonitoringService {
   }
 
   addResponseTime(time) {
-    this.metrics.responseTime.push({
+    this.metrics.responseTime.values.push({
       time,
       timestamp: Date.now(),
     });
+    this.metrics.responseTime.average = this.metrics.responseTime.values.reduce((a, b) => a + b, 0) / this.metrics.responseTime.values.length;
   }
 
   addMediaProcessingTime(duration) {
@@ -255,33 +282,7 @@ class MonitoringService {
   }
 
   getMetrics() {
-    return {
-      ...this.metrics,
-      timestamp: Date.now(),
-    };
-  }
-
-  async getTotalUsers() {
-    try {
-      return await User.count();
-    } catch (error) {
-      logger.error('Error getting total users:', error);
-      return 0;
-    }
-  }
-
-  async simulateStreamData() {
-    this.metrics.streams = {
-      active: Math.floor(Math.random() * 10),
-      total: 100 + Math.floor(Math.random() * 50),
-    };
-  }
-
-  async simulateMediaProcessing() {
-    this.metrics.processing = {
-      averageTime: 100 + Math.floor(Math.random() * 900),
-      queue: Math.floor(Math.random() * 5),
-    };
+    return this.metrics;
   }
 }
 

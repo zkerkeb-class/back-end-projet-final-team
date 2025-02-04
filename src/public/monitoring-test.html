@@ -77,10 +77,18 @@
     </div>
 
     <script>
-        const socket = io('/admin', {
+        const socket = io('http://localhost:8080/admin', {
+            transports: ['websocket'],
+            path: '/socket.io',
             auth: {
                 token: 'test-token'
-            }
+            },
+            withCredentials: true,
+            forceNew: true,
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000,
+            timeout: 10000
         });
 
         socket.on('connect', () => {

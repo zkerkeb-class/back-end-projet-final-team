@@ -1,117 +1,68 @@
-const redis = require('redis');
-const logger = require('../utils/loggerUtil');
-const config = require('../config');
+const Redis = require('ioredis');
+const { logger } = require('../config/logger');
 
-const REDIS_TIMEOUT = 5000;
-const OPERATION_TIMEOUT = 3000;
+class RedisCacheService {
+  constructor() {
+    this.client = new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: process.env.REDIS_PORT || 6379,
+      password: process.env.REDIS_PASSWORD,
+      retryStrategy: (times) => {
+        const delay = Math.min(times * 50, 2000);
+        return delay;
+      },
+    });
 
-const client = redis.createClient({
-  url: `redis://${config.redis.host || 'localhost'}:${config.redis.port || 6379}`,
-  password: config.redis.password,
-  socket: {
-    connectTimeout: REDIS_TIMEOUT,
-    timeout: OPERATION_TIMEOUT,
-  },
-});
+    this.client.on('error', (error) => {
+      logger.error('Redis connection error:', error);
+    });
 
-client.on('connect', () => {
-  logger.info('Redis client connected');
-});
-
-client.on('ready', () => {
-  logger.info('Redis client ready');
-});
-
-client.on('error', (err) => {
-  logger.error('Redis error:', err);
-});
-
-client.on('end', () => {
-  logger.info('Redis client disconnected');
-});
-
-const connectWithTimeout = () => {
-  return Promise.race([
-    client.connect(),
-    new Promise((_, reject) =>
-      setTimeout(
-        () => reject(new Error('Redis connection timeout')),
-        REDIS_TIMEOUT,
-      ),
-    ),
-  ]).catch((err) => {
-    logger.error('Redis connection failed:', err);
-    throw err;
-  });
-};
-
-// Connect avec timeout
-connectWithTimeout().catch(logger.error);
-
-const cacheService = {
-  async get(key) {
-    try {
-      if (!client.isReady) {
-        throw new Error('Redis client is not ready');
-      }
-
-      const result = await Promise.race([
-        client.get(key),
-        new Promise((_, reject) =>
-          setTimeout(
-            () => reject(new Error('Redis get operation timeout')),
-            OPERATION_TIMEOUT,
-          ),
-        ),
-      ]);
-
-      return result ? JSON.parse(result) : null;
-    } catch (err) {
-      logger.error('Error getting data from cache:', err);
-      return null;
-    }
-  },
-
-  async set(key, value, expiration = 3600) {
-    try {
-      if (!client.isReady) {
-        throw new Error('Redis client is not ready');
-      }
-
-      const data = JSON.stringify(value);
-      await Promise.race([
-        client.set(key, data, {
-          EX: expiration,
-        }),
-        new Promise((_, reject) =>
-          setTimeout(
-            () => reject(new Error('Redis set operation timeout')),
-            OPERATION_TIMEOUT,
-          ),
-        ),
-      ]);
-    } catch (err) {
-      logger.error('Error setting data to cache:', err);
-    }
-  },
-
-  async close() {
-    try {
-      await client.quit();
-      logger.info('Redis connection closed');
-    } catch (err) {
-      logger.error('Error closing Redis connection:', err);
-    }
-  },
+    this.client.on('connect', () => {
+      logger.info('Connected to Redis');
+    });
+  }
 
   async isRedisReady() {
     try {
-      await client.ping();
+      await this.client.ping();
       return true;
-    } catch (err) {
-      return err;
+    } catch {
+      return false;
     }
-  },
-};
+  }
 
-module.exports = { cacheService, client };
+  async set(key, value, expiration = 3600) {
+    try {
+      const serializedValue = JSON.stringify(value);
+      if (expiration) {
+        await this.client.setex(key, expiration, serializedValue);
+      } else {
+        await this.client.set(key, serializedValue);
+      }
+      return true;
+    } catch (error) {
+      logger.error('Redis set error:', error);
+      return false;
+    }
+  }
+
+  async get(key) {
+    try {
+      const value = await this.client.get(key);
+      return value ? JSON.parse(value) : null;
+    } catch (error) {
+      logger.error('Redis get error:', error);
+      return null;
+    }
+  }
+
+  getClient() {
+    return this.client;
+  }
+}
+
+const redisCacheService = new RedisCacheService();
+module.exports = {
+  redisClient: redisCacheService.getClient(),
+  cacheService: redisCacheService,
+};
