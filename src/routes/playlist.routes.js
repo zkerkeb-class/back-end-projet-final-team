@@ -7,8 +7,8 @@ const {
   updatePlaylistCover,
   deletePlaylist,
 } = require('../controllers/playlist.controller');
-const validate = require('../middlewares/validation.middleware');
-const { playlistUpdateSchema } = require('./validations/music.validation');
+// const validate = require('../middlewares/validation.middleware');
+// const { playlistUpdateSchema } = require('./validations/music.validation');
 const { uploadImage } = require('../config/multer');
 const { validateImageUpload } = require('../middlewares/cdn.middleware');
 const { getUserPlaylists } = require('../services/playlist.service');
@@ -197,12 +197,7 @@ router.post('/', createPlaylist);
  *               $ref: '#/components/schemas/Playlist'
  */
 //#endregion
-router.put(
-  '/:id',
-  authenticate,
-  validate(playlistUpdateSchema),
-  updatePlaylistData,
-);
+router.put('/:id', authenticate, updatePlaylistData);
 
 //#region
 /**
