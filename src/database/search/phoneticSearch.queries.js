@@ -71,6 +71,7 @@ WITH search_query AS (
         al.phonetic_title,
         al.release_date,
         al.total_tracks,
+        al.image_url,
         al.popularity_score as popularityScore,
         a.name as artist_name,
         COUNT(s.keyword) AS match_count,
