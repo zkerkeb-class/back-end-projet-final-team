@@ -1,7 +1,7 @@
 const { trackService } = require('../../../src/services');
 const cdnService = require('../../../src/services/cdn.service');
 const audioService = require('../../../src/services/audio.service');
-const redisCache = require('../../../src/services/redisCache.service');
+const { cacheService } = require('../../../src/services/redisCache.service');
 const {
   createTrack,
   deleteTrack,
@@ -13,7 +13,12 @@ const {
 jest.mock('../../../src/services');
 jest.mock('../../../src/services/cdn.service');
 jest.mock('../../../src/services/audio.service');
-jest.mock('../../../src/services/redisCache.service');
+jest.mock('../../../src/services/redisCache.service', () => ({
+  cacheService: {
+    get: jest.fn(),
+    set: jest.fn(),
+  },
+}));
 
 describe('TrackController', () => {
   let mockReq;
@@ -36,6 +41,8 @@ describe('TrackController', () => {
       end: jest.fn(),
     };
     mockNext = jest.fn();
+    cacheService.get.mockReset();
+    cacheService.set.mockReset();
     jest.clearAllMocks();
   });
 
@@ -194,26 +201,28 @@ describe('TrackController', () => {
         { id: 1, title: 'Track 1' },
         { id: 2, title: 'Track 2' },
       ];
-      mockReq.query = { limit: 10 };
-      redisCache.get.mockResolvedValue(null);
+      const limit = 10;
+      mockReq.query = { limit };
+      cacheService.get.mockResolvedValue(null);
+      cacheService.set.mockResolvedValue();
       trackService.getTopTracks.mockResolvedValue(mockTracks);
 
       await getTopTracks(mockReq, mockRes, mockNext);
 
-      expect(trackService.getTopTracks).toHaveBeenCalledWith(10);
+      expect(trackService.getTopTracks).toHaveBeenCalledWith(limit);
       expect(mockRes.status).toHaveBeenCalledWith(200);
       expect(mockRes.json).toHaveBeenCalledWith(mockTracks);
     });
+  });
 
-    it('should handle errors', async () => {
-      const error = new Error('Database error');
-      mockReq.query = { limit: 10 };
-      redisCache.get.mockResolvedValue(null);
-      trackService.getTopTracks.mockRejectedValue(error);
+  it('should handle errors', async () => {
+    const error = new Error('Database error');
+    mockReq.query = { limit: 10 };
+    cacheService.get.mockResolvedValue(null);
+    trackService.getTopTracks.mockRejectedValue(error);
 
-      await getTopTracks(mockReq, mockRes, mockNext);
+    await getTopTracks(mockReq, mockRes, mockNext);
 
-      expect(mockNext).toHaveBeenCalledWith(error);
-    });
+    expect(mockNext).toHaveBeenCalledWith(error);
   });
 });

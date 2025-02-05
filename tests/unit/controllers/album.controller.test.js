@@ -11,7 +11,12 @@ const {
 } = require('../../../src/controllers/album.controller');
 
 jest.mock('../../../src/services');
-jest.mock('../../../src/services/redisCache.service');
+jest.mock('../../../src/services/redisCache.service', () => ({
+  cacheService: {
+    get: jest.fn(),
+    set: jest.fn(),
+  },
+}));
 jest.mock('../../../src/models', () => {
   return {
     Album: {
@@ -41,6 +46,8 @@ describe('AlbumController', () => {
       end: jest.fn(),
     };
     mockNext = jest.fn();
+    cacheService.get.mockReset();
+    cacheService.set.mockReset();
     jest.clearAllMocks();
     Album.findAndCountAll.mockReset();
     Album.findByPk.mockReset();
