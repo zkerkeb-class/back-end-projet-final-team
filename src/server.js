@@ -6,6 +6,7 @@ const typeDefs = require('./graphql/schemas');
 const resolvers = require('./graphql/resolvers');
 const { cacheService } = require('./services/redisCache.service');
 const webSocketService = require('./services/websocket.service');
+const jamSessionService = require('./services/jamSession.service');
 const responseTimeMiddleware = require('./middlewares/responseTime.middleware');
 const port = config.port || 8080;
 
@@ -45,9 +46,11 @@ const start = async () => {
     });
 
     webSocketService.initialize(server);
+    jamSessionService.initialize(webSocketService.io);
 
     const gracefulShutdown = () => {
       webSocketService.shutdown();
+      jamSessionService.shutdown();
       server.close(() => {
         logger.info('Server closed');
         process.exit(0);

@@ -10,6 +10,8 @@ const AlbumArtist = require('./albumArtist.model');
 const PlaylistTrack = require('./playlistTrack.model');
 const ListeningSession = require('./listeningSession.model');
 const AdminActionLog = require('./adminActionLog.model');
+const JamRoom = require('./jamRoom.model');
+const JamParticipant = require('./jamParticipant.model');
 
 // User Associations
 User.belongsToMany(Role, { through: UserRole, foreignKey: 'user_id' });
@@ -52,6 +54,25 @@ Track.belongsToMany(Playlist, {
 ListeningSession.belongsTo(Track, { foreignKey: 'current_track_id' });
 Track.hasMany(ListeningSession, { foreignKey: 'current_track_id' });
 
+// Jam Session Relations
+JamRoom.belongsTo(User, {
+  foreignKey: 'createdBy',
+  as: 'creator',
+});
+
+JamRoom.hasMany(JamParticipant, {
+  foreignKey: 'roomId',
+  as: 'participants',
+});
+
+JamParticipant.belongsTo(JamRoom, {
+  foreignKey: 'roomId',
+});
+
+JamParticipant.belongsTo(User, {
+  foreignKey: 'userId',
+});
+
 module.exports = {
   User,
   Role,
@@ -65,4 +86,6 @@ module.exports = {
   PlaylistTrack,
   ListeningSession,
   AdminActionLog,
+  JamRoom,
+  JamParticipant,
 };

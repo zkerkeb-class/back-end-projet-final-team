@@ -6,7 +6,7 @@ const trackRoutes = require('./track.routes');
 const playlistRoutes = require('./playlist.routes');
 const logger = require('../utils/loggerUtil');
 const adminRoutes = require('./admin.routes');
-
+const jamRoomRoutes = require('./jamRoom.routes');
 // Mount routes
 router.use(`/auth`, authRoutes);
 router.use(`/artists`, artistRoutes);
@@ -14,6 +14,7 @@ router.use(`/albums`, albumRoutes);
 router.use(`/tracks`, trackRoutes);
 router.use(`/playlists`, playlistRoutes);
 router.use(`/admin`, adminRoutes);
+router.use(`/jam-rooms`, jamRoomRoutes);
 
 // Health check endpoint
 router.get(`/health`, (req, res) => {
