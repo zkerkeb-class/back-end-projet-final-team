@@ -116,11 +116,11 @@ class MonitoringService {
 
       const mainDisk = fsSize.find((fs) => fs.mount === '/') ||
         fsSize[0] || {
-        size: 0,
-        used: 0,
-        available: 0,
-        use: 0,
-      };
+          size: 0,
+          used: 0,
+          available: 0,
+          use: 0,
+        };
       this.metrics.storage = {
         total: mainDisk.size || 0,
         used: mainDisk.used || 0,

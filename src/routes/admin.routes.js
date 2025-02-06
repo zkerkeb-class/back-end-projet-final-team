@@ -8,7 +8,7 @@ const {
 } = require('../controllers/admin.controller');
 const { authenticate, isAdmin } = require('../middlewares/auth.middleware');
 const validate = require('../middlewares/validation.middleware');
-const { artistSchema, albumSchema } = require('./validations/music.validation');
+const { artistSchema } = require('./validations/music.validation');
 
 router.use(authenticate);
 

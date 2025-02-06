@@ -85,7 +85,7 @@ const createTrackToArtist = async (req, res, next) => {
     next(error);
   }
 };
-const editTrack = async (req, res, next) => { };
+// const editTrack = async (req, res, next) => {};
 
 module.exports = {
   createArtist,
@@ -93,5 +93,5 @@ module.exports = {
   // createAlbum,
   // editAlbum,
   createTrackToArtist,
-  editTrack,
+  // editTrack,
 };
