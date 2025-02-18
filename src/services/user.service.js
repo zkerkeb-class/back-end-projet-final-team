@@ -18,7 +18,7 @@ class UserService extends BaseService {
     try {
       const hashedPassword = await bcrypt.hash(userData.password, 10);
 
-      const user = await this.create({
+      const user = await User.create({
         ...userData,
         password_hash: hashedPassword,
       });
