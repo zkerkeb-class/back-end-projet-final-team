@@ -9,7 +9,6 @@ import {
 } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
 import api from '@/utils/axios';
 interface User {
   id: string;
@@ -47,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('Invalid token:', error);
         localStorage.removeItem('user');
+        localStorage.removeItem('accessToken');
         setUser(null);
         router.push('/login');
       }

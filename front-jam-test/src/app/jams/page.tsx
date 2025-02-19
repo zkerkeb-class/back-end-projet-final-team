@@ -41,7 +41,7 @@ export default function JamsPage() {
 
   const fetchRooms = async () => {
     try {
-      const response = await api.get('/jam-rooms');
+      const response = await api.get('/jam');
       setRooms(response.data);
     } catch (error) {
       console.error('Error fetching rooms:', error);

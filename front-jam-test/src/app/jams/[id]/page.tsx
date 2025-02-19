@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSocket } from '@/contexts/SocketContext';
 import { useRouter } from 'next/navigation';
@@ -30,7 +30,11 @@ interface JamRoomDetails {
   participants: Participant[];
 }
 
-export default function JamRoom({ params }: { params: { id: string } }) {
+export default function JamRoom({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const { user } = useAuth();
   const router = useRouter();
   const { connectToRoom, disconnectFromRoom, socket, isConnected, emitEvent } =
@@ -41,43 +45,54 @@ export default function JamRoom({ params }: { params: { id: string } }) {
     { type: string; username: string }[]
   >([]);
 
+  const roomId = React.use(params).id;
+
   useEffect(() => {
     const fetchRoomDetails = async () => {
       try {
-        const response = await api.get(`/api/jams/${params.id}`);
+        const response = await api.get(`/jam/${roomId}`);
+        console.log('room: ', response.data);
         setRoom(response.data);
         setParticipants(response.data.participants);
       } catch (error) {
+        console.log('error: ', error);
         toast.error('Failed to fetch room details');
         router.push('/jams');
       }
     };
 
     fetchRoomDetails();
-  }, [params.id, router]);
+  }, [roomId, router]);
 
+  // Effet pour la connexion socket
   useEffect(() => {
-    if (room && user) {
-      connectToRoom(room.id);
+    if (!room || !user) return;
 
-      return () => {
-        disconnectFromRoom();
-      };
-    }
-  }, [room, user, connectToRoom, disconnectFromRoom]);
+    console.log('Connecting to room:', room.id);
+    connectToRoom(room.id);
 
+    return () => {
+      console.log('Disconnecting from room');
+      disconnectFromRoom();
+    };
+  }, [room?.id, user?.id]); // Dépendances plus précises
+
+  // Effet pour les événements socket
   useEffect(() => {
     if (!socket) return;
+
+    console.log('Setting up socket event listeners');
 
     const handleParticipantsUpdate = (data: {
       participants: Participant[];
     }) => {
+      console.log('Participants update received:', data);
       setParticipants(data.participants);
     };
 
     const handleReaction = (data: { type: string; username: string }) => {
+      console.log('Reaction received:', data);
       setReactions((prev) => [...prev, data]);
-      // Remove reaction after 3 seconds
       setTimeout(() => {
         setReactions((prev) => prev.filter((r) => r !== data));
       }, 3000);
@@ -88,6 +103,7 @@ export default function JamRoom({ params }: { params: { id: string } }) {
     socket.on('jam:reaction', handleReaction);
 
     return () => {
+      console.log('Cleaning up socket event listeners');
       socket.off('participants:update', handleParticipantsUpdate);
       socket.off('room:state', handleParticipantsUpdate);
       socket.off('jam:reaction', handleReaction);

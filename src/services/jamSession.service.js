@@ -5,59 +5,46 @@ const User = require('../models/user.model');
 
 class JamSessionService {
   constructor() {
-    this.io = null;
-    this.jamNamespace = null;
+    this.namespace = null;
     this.rooms = new Map();
   }
 
-  initialize(io) {
-    this.io = io;
-    this.jamNamespace = io.of('/jam');
+  initialize(namespace) {
+    this.namespace = namespace;
+    this.setupEventHandlers();
+  }
 
-    this.jamNamespace.on('connection', this.handleConnection.bind(this));
+  setupEventHandlers() {
+    if (!this.namespace) {
+      throw new Error(
+        'Namespace must be initialized before setting up handlers',
+      );
+    }
+
+    this.namespace.on('connection', this.handleConnection.bind(this));
   }
 
   async handleConnection(socket) {
     const { userId, roomId } = socket.handshake.auth;
-
-    if (!userId || !roomId) {
-      socket.disconnect();
-      return;
-    }
+    logger.info(`User ${userId} attempting to join room ${roomId}`);
 
     try {
-      const room = await JamRoom.findByPk(roomId);
-      if (!room || room.status === 'closed') {
-        socket.emit('error', { message: 'Room not found or closed' });
-        socket.disconnect();
-        return;
-      }
-
+      const room = await this.validateRoomAccess(roomId);
       const participant = await this.joinRoom(userId, roomId);
-      socket.participant = participant;
-      socket.join(roomId);
 
-      // Envoyer la mise à jour à tous les participants de la salle
-      const updatedRoom = await this.getRoomState(roomId);
-      this.jamNamespace.to(roomId).emit('participants:update', updatedRoom);
-
-      // Send current room state to the new participant
-      socket.emit('room:state', updatedRoom);
-
-      // Handle events
-      socket.on('participant:update', (data) =>
-        this.handleParticipantUpdate(socket, data),
-      );
-      socket.on('participant:ready', (data) =>
-        this.handleParticipantReady(socket, data),
-      );
-      socket.on('jam:reaction', (data) => this.handleJamReaction(socket, data));
-      socket.on('jam:event', (data) => this.handleJamEvent(socket, data));
-      socket.on('disconnect', () => this.handleDisconnect(socket));
+      this.setupSocketSession(socket, participant, room);
+      await this.notifyRoomParticipants(roomId);
     } catch (error) {
-      logger.error('Error in jam session connection:', error);
-      socket.disconnect();
+      this.handleConnectionError(socket, error);
     }
+  }
+
+  async validateRoomAccess(roomId) {
+    const room = await JamRoom.findByPk(roomId);
+    if (!room || room.status === 'closed') {
+      throw new Error('Room not found or closed');
+    }
+    return room;
   }
 
   async joinRoom(userId, roomId) {
@@ -79,6 +66,34 @@ class JamSessionService {
     }
 
     return participant;
+  }
+
+  setupSocketSession(socket, participant, room) {
+    socket.participant = participant;
+    socket.join(room.id);
+
+    // Setup event listeners
+    socket.on('participant:update', (data) =>
+      this.handleParticipantUpdate(socket, data),
+    );
+    socket.on('participant:ready', (data) =>
+      this.handleParticipantReady(socket, data),
+    );
+    socket.on('jam:reaction', (data) => this.handleJamReaction(socket, data));
+    socket.on('jam:event', (data) => this.handleJamEvent(socket, data));
+    socket.on('disconnect', () => this.handleDisconnect(socket));
+  }
+
+  async notifyRoomParticipants(roomId) {
+    const roomState = await this.getRoomState(roomId);
+    this.namespace.to(roomId).emit('participants:update', roomState);
+    return roomState;
+  }
+
+  handleConnectionError(socket, error) {
+    logger.error('Error in jam session connection:', error);
+    socket.emit('error', { message: error.message || 'Connection failed' });
+    socket.disconnect();
   }
 
   async getRoomState(roomId) {
@@ -110,9 +125,7 @@ class JamSessionService {
     const { userId, roomId, instrument } = data;
     const participant = socket.participant;
 
-    if (participant.userId !== userId || participant.roomId !== roomId) {
-      return;
-    }
+    if (!this.validateParticipantAction(participant, userId, roomId)) return;
 
     try {
       await participant.update({
@@ -120,11 +133,9 @@ class JamSessionService {
         lastActiveAt: new Date(),
       });
 
-      const updatedRoom = await this.getRoomState(roomId);
-      this.jamNamespace.to(roomId).emit('participants:update', updatedRoom);
+      await this.notifyRoomParticipants(roomId);
     } catch (error) {
-      logger.error('Error updating participant:', error);
-      socket.emit('error', { message: 'Failed to update participant' });
+      this.handleEventError(socket, 'Failed to update participant', error);
     }
   }
 
@@ -132,9 +143,7 @@ class JamSessionService {
     const { userId, roomId, ready } = data;
     const participant = socket.participant;
 
-    if (participant.userId !== userId || participant.roomId !== roomId) {
-      return;
-    }
+    if (!this.validateParticipantAction(participant, userId, roomId)) return;
 
     try {
       await participant.update({
@@ -142,11 +151,9 @@ class JamSessionService {
         lastActiveAt: new Date(),
       });
 
-      const updatedRoom = await this.getRoomState(roomId);
-      this.jamNamespace.to(roomId).emit('participants:update', updatedRoom);
+      await this.notifyRoomParticipants(roomId);
     } catch (error) {
-      logger.error('Error updating participant ready state:', error);
-      socket.emit('error', { message: 'Failed to update ready state' });
+      this.handleEventError(socket, 'Failed to update ready state', error);
     }
   }
 
@@ -156,19 +163,17 @@ class JamSessionService {
 
     try {
       const user = await User.findByPk(participant.userId);
-      this.jamNamespace.to(participant.roomId).emit('jam:reaction', {
+      this.namespace.to(participant.roomId).emit('jam:reaction', {
         type,
         username: user.username,
       });
     } catch (error) {
-      logger.error('Error handling reaction:', error);
-      socket.emit('error', { message: 'Failed to send reaction' });
+      this.handleEventError(socket, 'Failed to send reaction', error);
     }
   }
 
   handleJamEvent(socket, data) {
     const { roomId } = socket.participant;
-    // Broadcast the event to all other participants in the room
     socket.to(roomId).emit('jam:event', {
       userId: socket.participant.userId,
       ...data,
@@ -186,22 +191,25 @@ class JamSessionService {
         { where: { userId, roomId } },
       );
 
-      // Envoyer la mise à jour à tous les participants restants
-      const updatedRoom = await this.getRoomState(roomId);
-      this.jamNamespace.to(roomId).emit('participants:update', updatedRoom);
-
-      // Notify others in the room
-      socket.to(roomId).emit('participant:left', { userId });
+      await this.notifyRoomParticipants(roomId);
+      this.namespace.to(roomId).emit('participant:left', { userId });
     } catch (error) {
       logger.error('Error handling disconnect:', error);
     }
   }
 
-  shutdown() {
-    if (this.jamNamespace) {
-      const connectedSockets = this.jamNamespace.sockets;
+  validateParticipantAction(participant, userId, roomId) {
+    return participant.userId === userId && participant.roomId === roomId;
+  }
 
-      // Disconnect all sockets
+  handleEventError(socket, message, error) {
+    logger.error(`${message}:`, error);
+    socket.emit('error', { message });
+  }
+
+  shutdown() {
+    if (this.namespace) {
+      const connectedSockets = this.namespace.sockets;
       connectedSockets.forEach((socket) => {
         socket.disconnect(true);
       });

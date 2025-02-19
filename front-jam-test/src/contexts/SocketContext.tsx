@@ -47,15 +47,14 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   }, [socket]);
 
   const connectToRoom = useCallback(
-    (roomId: string) => {
+    async (roomId: string) => {
       if (!user) {
         toast.error('You must be logged in to join a room');
         return;
       }
 
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        toast.error('Authentication token not found');
+      // Si déjà connecté à la même room, ne rien faire
+      if (socket?.connected && socket.auth?.roomId === roomId) {
         return;
       }
 
@@ -64,13 +63,13 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         socket.disconnect();
       }
 
-      const newSocket = io('http://localhost:8080/jam', {
+      const newSocket = io('http://localhost:8080', {
         auth: {
-          token,
           userId: user.id,
           roomId,
         },
-        transports: ['websocket'],
+        path: '/socket.io/jam',
+        transports: ['websocket', 'polling'],
         reconnection: true,
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
@@ -85,15 +84,14 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       newSocket.on('connect_error', (error) => {
         console.error('Connection error:', error);
         toast.error('Failed to connect: ' + error.message);
+        setSocket(null);
+        setIsConnected(false);
       });
 
       newSocket.on('disconnect', (reason) => {
         setIsConnected(false);
         toast.error(`Disconnected: ${reason}`);
-      });
-
-      newSocket.on('reconnect', (attemptNumber) => {
-        toast.success(`Reconnected after ${attemptNumber} attempts`);
+        setSocket(null);
       });
 
       // Room events
@@ -146,11 +144,13 @@ export function SocketProvider({ children }: { children: ReactNode }) {
         toast.success(`${data.username}: ${data.message}`);
       });
 
+      // Set the socket only after setting up all event listeners
       setSocket(newSocket);
     },
     [user, socket],
   );
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (socket) {

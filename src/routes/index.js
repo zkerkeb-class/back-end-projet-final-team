@@ -14,7 +14,7 @@ router.use(`/albums`, albumRoutes);
 router.use(`/tracks`, trackRoutes);
 router.use(`/playlists`, playlistRoutes);
 router.use(`/admin`, adminRoutes);
-router.use(`/jam-rooms`, jamRoomRoutes);
+router.use(`/jam`, jamRoomRoutes);
 
 // Health check endpoint
 router.get(`/health`, (req, res) => {

@@ -13,15 +13,15 @@ const JamParticipant = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Users',
+        model: 'users',
         key: 'id',
       },
     },
     roomId: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.UUID,
       allowNull: false,
       references: {
-        model: 'JamRooms',
+        model: 'jam_rooms',
         key: 'id',
       },
     },

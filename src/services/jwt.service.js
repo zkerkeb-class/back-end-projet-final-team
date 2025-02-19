@@ -11,7 +11,7 @@ const generateAccessToken = (user) => {
       roles: user.Roles?.map((role) => role.name),
     },
     config.jwtSecret,
-    { expiresIn: '1h', audience: 'zakharmonie', issuer: 'auth0' },
+    { expiresIn: '5h', audience: 'zakharmonie', issuer: 'auth0' },
   );
 };
 
