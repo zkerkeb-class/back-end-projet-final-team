@@ -5,27 +5,25 @@ const JamParticipant = sequelize.define(
   'JamParticipant',
   {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.INTEGER,
       primaryKey: true,
+      autoIncrement: true,
     },
     userId: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'users',
+        model: 'Users',
         key: 'id',
       },
-      field: 'user_id',
     },
     roomId: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'jam_rooms',
+        model: 'JamRooms',
         key: 'id',
       },
-      field: 'room_id',
     },
     role: {
       type: DataTypes.ENUM('host', 'participant'),
@@ -39,22 +37,19 @@ const JamParticipant = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    ready: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
     lastActiveAt: {
       type: DataTypes.DATE,
+      allowNull: false,
       defaultValue: DataTypes.NOW,
-      field: 'last_active_at',
     },
   },
   {
+    tableName: 'JamParticipants',
     timestamps: true,
-    tableName: 'jam_participants',
-    underscored: true,
-    indexes: [
-      {
-        unique: true,
-        fields: ['user_id', 'room_id'],
-      },
-    ],
   },
 );
 

@@ -46,7 +46,7 @@ class MonitoringService {
         successRate: 100,
       },
     };
-    this.updateInterval = 5000;
+    this.updateInterval = 5000000;
     this.logPath = path.join(process.cwd(), 'logs');
     this.errorLogPath = path.join(this.logPath, 'error.log');
     this.combinedLogPath = path.join(this.logPath, 'combined.log');

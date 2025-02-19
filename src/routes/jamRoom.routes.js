@@ -1,6 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const jamRoomController = require('../controllers/jamRoom.controller');
+const {
+  createRoom,
+  getRooms,
+  getRoom,
+  closeRoom,
+  updateParticipant,
+} = require('../controllers/jamRoom.controller');
 const { authenticate } = require('../middlewares/auth.middleware');
 
 /**
@@ -83,7 +89,7 @@ router.use(authenticate);
  *       500:
  *         description: Erreur serveur
  */
-router.post('/', jamRoomController.createRoom.bind(jamRoomController));
+router.post('/', createRoom);
 
 /**
  * @swagger
@@ -105,7 +111,7 @@ router.post('/', jamRoomController.createRoom.bind(jamRoomController));
  *       401:
  *         description: Non authentifié
  */
-router.get('/', jamRoomController.getRooms.bind(jamRoomController));
+router.get('/', getRooms);
 
 /**
  * @swagger
@@ -135,7 +141,7 @@ router.get('/', jamRoomController.getRooms.bind(jamRoomController));
  *       401:
  *         description: Non authentifié
  */
-router.get('/:roomId', jamRoomController.getRoom.bind(jamRoomController));
+router.get('/:roomId', getRoom);
 
 /**
  * @swagger
@@ -163,10 +169,7 @@ router.get('/:roomId', jamRoomController.getRoom.bind(jamRoomController));
  *       401:
  *         description: Non authentifié
  */
-router.put(
-  '/:roomId/close',
-  jamRoomController.closeRoom.bind(jamRoomController),
-);
+router.put('/:roomId/close', closeRoom);
 
 /**
  * @swagger
@@ -202,9 +205,6 @@ router.put(
  *       401:
  *         description: Non authentifié
  */
-router.put(
-  '/:roomId/participant',
-  jamRoomController.updateParticipant.bind(jamRoomController),
-);
+router.put('/:roomId/participant', updateParticipant);
 
 module.exports = router;

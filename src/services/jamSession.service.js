@@ -1,6 +1,7 @@
 const { logger } = require('../config/logger');
 const JamRoom = require('../models/jamRoom.model');
 const JamParticipant = require('../models/jamParticipant.model');
+const User = require('../models/user.model');
 
 class JamSessionService {
   constructor() {
@@ -36,18 +37,21 @@ class JamSessionService {
       socket.participant = participant;
       socket.join(roomId);
 
-      // Notify others in the room
-      socket.to(roomId).emit('participant:joined', {
-        userId: participant.userId,
-        role: participant.role,
-        instrument: participant.instrument,
-      });
+      // Envoyer la mise à jour à tous les participants de la salle
+      const updatedRoom = await this.getRoomState(roomId);
+      this.jamNamespace.to(roomId).emit('participants:update', updatedRoom);
 
       // Send current room state to the new participant
-      const roomState = await this.getRoomState(roomId);
-      socket.emit('room:state', roomState);
+      socket.emit('room:state', updatedRoom);
 
       // Handle events
+      socket.on('participant:update', (data) =>
+        this.handleParticipantUpdate(socket, data),
+      );
+      socket.on('participant:ready', (data) =>
+        this.handleParticipantReady(socket, data),
+      );
+      socket.on('jam:reaction', (data) => this.handleJamReaction(socket, data));
       socket.on('jam:event', (data) => this.handleJamEvent(socket, data));
       socket.on('disconnect', () => this.handleDisconnect(socket));
     } catch (error) {
@@ -62,6 +66,7 @@ class JamSessionService {
       defaults: {
         status: 'active',
         lastActiveAt: new Date(),
+        ready: false,
       },
     });
 
@@ -69,6 +74,7 @@ class JamSessionService {
       await participant.update({
         status: 'active',
         lastActiveAt: new Date(),
+        ready: false,
       });
     }
 
@@ -78,7 +84,13 @@ class JamSessionService {
   async getRoomState(roomId) {
     const participants = await JamParticipant.findAll({
       where: { roomId, status: 'active' },
-      attributes: ['userId', 'role', 'instrument'],
+      attributes: ['userId', 'role', 'instrument', 'ready'],
+      include: [
+        {
+          model: User,
+          attributes: ['username'],
+        },
+      ],
     });
 
     return {
@@ -86,8 +98,72 @@ class JamSessionService {
         userId: p.userId,
         role: p.role,
         instrument: p.instrument,
+        ready: p.ready,
+        User: {
+          username: p.User.username,
+        },
       })),
     };
+  }
+
+  async handleParticipantUpdate(socket, data) {
+    const { userId, roomId, instrument } = data;
+    const participant = socket.participant;
+
+    if (participant.userId !== userId || participant.roomId !== roomId) {
+      return;
+    }
+
+    try {
+      await participant.update({
+        instrument,
+        lastActiveAt: new Date(),
+      });
+
+      const updatedRoom = await this.getRoomState(roomId);
+      this.jamNamespace.to(roomId).emit('participants:update', updatedRoom);
+    } catch (error) {
+      logger.error('Error updating participant:', error);
+      socket.emit('error', { message: 'Failed to update participant' });
+    }
+  }
+
+  async handleParticipantReady(socket, data) {
+    const { userId, roomId, ready } = data;
+    const participant = socket.participant;
+
+    if (participant.userId !== userId || participant.roomId !== roomId) {
+      return;
+    }
+
+    try {
+      await participant.update({
+        ready,
+        lastActiveAt: new Date(),
+      });
+
+      const updatedRoom = await this.getRoomState(roomId);
+      this.jamNamespace.to(roomId).emit('participants:update', updatedRoom);
+    } catch (error) {
+      logger.error('Error updating participant ready state:', error);
+      socket.emit('error', { message: 'Failed to update ready state' });
+    }
+  }
+
+  async handleJamReaction(socket, data) {
+    const { type } = data;
+    const participant = socket.participant;
+
+    try {
+      const user = await User.findByPk(participant.userId);
+      this.jamNamespace.to(participant.roomId).emit('jam:reaction', {
+        type,
+        username: user.username,
+      });
+    } catch (error) {
+      logger.error('Error handling reaction:', error);
+      socket.emit('error', { message: 'Failed to send reaction' });
+    }
   }
 
   handleJamEvent(socket, data) {
@@ -106,9 +182,13 @@ class JamSessionService {
 
     try {
       await JamParticipant.update(
-        { status: 'inactive', lastActiveAt: new Date() },
+        { status: 'inactive', lastActiveAt: new Date(), ready: false },
         { where: { userId, roomId } },
       );
+
+      // Envoyer la mise à jour à tous les participants restants
+      const updatedRoom = await this.getRoomState(roomId);
+      this.jamNamespace.to(roomId).emit('participants:update', updatedRoom);
 
       // Notify others in the room
       socket.to(roomId).emit('participant:left', { userId });
