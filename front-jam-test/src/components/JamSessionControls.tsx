@@ -48,7 +48,7 @@ export default function JamSessionControls({
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-medium mb-3">Select Your Instrument</h3>
+        <h3 className="text-lg font-medium mb-3 text-black">Select Your Instrument</h3>
         <div className="grid grid-cols-2 gap-2">
           {AVAILABLE_INSTRUMENTS.map((instrument) => (
             <button
@@ -57,7 +57,7 @@ export default function JamSessionControls({
               className={`p-2 rounded-md transition-colors ${
                 selectedInstrument === instrument.id
                   ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 hover:bg-gray-200'
+                  : 'bg-gray-100 hover:bg-gray-200 text-black'
               }`}
             >
               {instrument.name}
@@ -80,17 +80,17 @@ export default function JamSessionControls({
       </div>
 
       <div className="mt-4">
-        <h3 className="text-lg font-medium mb-3">Quick Actions</h3>
+        <h3 className="text-lg font-medium mb-3 text-black">Quick Actions</h3>
         <div className="space-y-2">
           <button
             onClick={() => emitEvent('jam:reaction', { type: 'applause' })}
-            className="w-full p-2 bg-gray-100 rounded-md hover:bg-gray-200"
+            className="w-full p-2 bg-gray-100 rounded-md hover:bg-gray-200 text-black"
           >
             👏 Applaud
           </button>
           <button
             onClick={() => emitEvent('jam:reaction', { type: 'encore' })}
-            className="w-full p-2 bg-gray-100 rounded-md hover:bg-gray-200"
+            className="w-full p-2 bg-gray-100 rounded-md hover:bg-gray-200 text-black"
           >
             🎵 Request Encore
           </button>

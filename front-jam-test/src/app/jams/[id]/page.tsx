@@ -124,8 +124,8 @@ export default function JamRoom({
     <div className="container mx-auto px-4 py-8">
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold mb-2">{room.name}</h1>
-          <p className="text-gray-600">{room.description}</p>
+          <h1 className="text-3xl font-bold mb-2 text-black">{room.name}</h1>
+          <p className="text-black">{room.description}</p>
           {isHost && (
             <div className="mt-4">
               <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded">
@@ -138,7 +138,7 @@ export default function JamRoom({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Participants Section */}
           <div className="bg-gray-50 rounded-lg p-4">
-            <h2 className="text-xl font-semibold mb-4">
+            <h2 className="text-xl font-semibold mb-4 text-black">
               Participants ({participants.length}/{room.maxParticipants})
             </h2>
             <div className="space-y-3">
@@ -148,10 +148,10 @@ export default function JamRoom({
                   className="flex items-center justify-between bg-white p-3 rounded-md shadow-sm"
                 >
                   <div>
-                    <span className="font-medium">
+                    <span className="font-medium text-black">
                       {participant.User.username}
                     </span>
-                    <span className="text-sm text-gray-500 ml-2">
+                    <span className="text-sm text-black ml-2">
                       ({participant.role})
                     </span>
                     {participant.ready && (
@@ -172,7 +172,7 @@ export default function JamRoom({
 
           {/* Controls Section */}
           <div className="bg-gray-50 rounded-lg p-4">
-            <h2 className="text-xl font-semibold mb-4">Session Controls</h2>
+            <h2 className="text-xl font-semibold mb-4 text-black">Session Controls</h2>
             {isConnected ? (
               <div className="space-y-4">
                 <div className="flex items-center space-x-2 mb-4">
@@ -197,7 +197,7 @@ export default function JamRoom({
           {reactions.map((reaction, index) => (
             <div
               key={index}
-              className="bg-white rounded-lg shadow-lg px-4 py-2 animate-fade-in-up"
+              className="bg-white rounded-lg shadow-lg px-4 py-2 animate-fade-in-up text-black"
             >
               {reaction.type === 'applause' ? '👏' : '🎵'} {reaction.username}
             </div>

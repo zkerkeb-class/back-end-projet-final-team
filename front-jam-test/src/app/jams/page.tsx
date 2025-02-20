@@ -52,7 +52,7 @@ export default function JamsPage() {
   const createRoom = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/jam-rooms', {
+      await api.post('/jam', {
         name: newRoomName,
         description: newRoomDescription,
         maxParticipants: newRoomMaxParticipants,
