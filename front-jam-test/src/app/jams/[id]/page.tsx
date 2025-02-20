@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import api from '@/utils/axios';
 import toast from 'react-hot-toast';
 import JamSessionControls from '@/components/JamSessionControls';
+import MusicPlayer from '@/components/MusicPlayer';
 
 interface Participant {
   userId: string;
@@ -135,6 +136,11 @@ export default function JamRoom({
           )}
         </div>
 
+        {/* Music Player Section */}
+        <div className="mb-8">
+          <MusicPlayer roomId={room.id} isHost={isHost} />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Participants Section */}
           <div className="bg-gray-50 rounded-lg p-4">
@@ -172,7 +178,9 @@ export default function JamRoom({
 
           {/* Controls Section */}
           <div className="bg-gray-50 rounded-lg p-4">
-            <h2 className="text-xl font-semibold mb-4 text-black">Session Controls</h2>
+            <h2 className="text-xl font-semibold mb-4 text-black">
+              Session Controls
+            </h2>
             {isConnected ? (
               <div className="space-y-4">
                 <div className="flex items-center space-x-2 mb-4">

@@ -7,6 +7,7 @@ class JamSessionService {
   constructor() {
     this.namespace = null;
     this.rooms = new Map();
+    this.playbackStates = new Map(); // Pour stocker l'état de lecture de chaque salle
   }
 
   initialize(namespace) {
@@ -34,6 +35,12 @@ class JamSessionService {
 
       this.setupSocketSession(socket, participant, room);
       await this.notifyRoomParticipants(roomId);
+
+      // Envoyer l'état de lecture actuel au nouveau participant
+      const playbackState = this.playbackStates.get(roomId);
+      if (playbackState) {
+        socket.emit('playback:control', playbackState);
+      }
     } catch (error) {
       this.handleConnectionError(socket, error);
     }
@@ -80,8 +87,47 @@ class JamSessionService {
       this.handleParticipantReady(socket, data),
     );
     socket.on('jam:reaction', (data) => this.handleJamReaction(socket, data));
-    socket.on('jam:event', (data) => this.handleJamEvent(socket, data));
+    socket.on('playback:control', (data) => this.handlePlaybackControl(socket, data));
     socket.on('disconnect', () => this.handleDisconnect(socket));
+  }
+
+  async handlePlaybackControl(socket, data) {
+    const { action, time, trackId } = data;
+    const { roomId } = socket.participant;
+
+    logger.info(`Received playback control: ${action} for room ${roomId}`);
+
+    try {
+      // Vérifier directement si le participant est l'hôte
+      const participant = await JamParticipant.findOne({
+        where: {
+          roomId,
+          userId: socket.participant.userId,
+          role: 'host',
+          status: 'active'
+        }
+      });
+
+      if (!participant) {
+        logger.warn(`Non-host user ${socket.participant.userId} attempted to control playback`);
+        socket.emit('error', { message: 'Only the host can control playback' });
+        return;
+      }
+
+      // Mettre à jour l'état de lecture
+      const playbackState = { action, time, trackId };
+      this.playbackStates.set(roomId, playbackState);
+
+      logger.info(`Broadcasting playback control to room ${roomId}:`, playbackState);
+
+      // Diffuser le contrôle à tous les participants de la salle
+      this.namespace.to(roomId).emit('playback:control', playbackState);
+
+      logger.info(`Playback control: ${action} in room ${roomId} successful`);
+    } catch (error) {
+      logger.error('Error handling playback control:', error);
+      socket.emit('error', { message: 'Failed to control playback' });
+    }
   }
 
   async notifyRoomParticipants(roomId) {
@@ -191,6 +237,12 @@ class JamSessionService {
         { where: { userId, roomId } },
       );
 
+      // Si c'était l'hôte, supprimer l'état de lecture
+      const room = await JamRoom.findByPk(roomId);
+      if (room && room.createdBy === userId) {
+        this.playbackStates.delete(roomId);
+      }
+
       await this.notifyRoomParticipants(roomId);
       this.namespace.to(roomId).emit('participant:left', { userId });
     } catch (error) {
@@ -213,6 +265,7 @@ class JamSessionService {
       connectedSockets.forEach((socket) => {
         socket.disconnect(true);
       });
+      this.playbackStates.clear();
     }
   }
 }
