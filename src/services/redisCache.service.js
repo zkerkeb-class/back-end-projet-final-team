@@ -7,7 +7,7 @@ const OPERATION_TIMEOUT = 3000;
 
 const client = redis.createClient({
   url: `redis://${config.redis.host || 'localhost'}:${config.redis.port || 6379}`,
-  password: config.redis.password,
+  // password: config.redis.password,
   socket: {
     connectTimeout: REDIS_TIMEOUT,
     timeout: OPERATION_TIMEOUT,
