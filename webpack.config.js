@@ -3,17 +3,6 @@ const nodeExternals = require('webpack-node-externals');
 const Dotenv = require('dotenv-webpack');
 
 module.exports = (env) => {
-  const envPath = (() => {
-    switch (env.NODE_ENV) {
-      case 'production':
-        return './env/.env.prod';
-      case 'test':
-        return './env/.env.test';
-      default:
-        return './env/.env.dev';
-    }
-  })();
-
   return {
     target: 'node',
     mode: env.NODE_ENV || 'development',
@@ -39,9 +28,8 @@ module.exports = (env) => {
     },
     plugins: [
       new Dotenv({
-        path: envPath,
+        path: '.env',
         systemvars: true,
-        safe: true,
       }),
     ],
   };
