@@ -5,3 +5,4 @@ env/.env.test
 logs
 dist/
 coverage
+.env
