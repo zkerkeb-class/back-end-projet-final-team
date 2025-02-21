@@ -31,6 +31,9 @@ module.exports = {
         logger.info(msg);
       }
     },
+    dialectOptions: {
+      ssl: false,
+    },
   },
   test: {
     ...defaultConfig,
@@ -40,12 +43,9 @@ module.exports = {
   production: {
     ...defaultConfig,
     url: config.db.host,
-    logging: false,
+    logging: true,
     dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false,
-      },
+      ssl: false,
     },
   },
 };
