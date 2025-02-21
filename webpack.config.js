@@ -30,6 +30,8 @@ module.exports = (env) => {
       new Dotenv({
         path: '.env',
         systemvars: true,
+        allowEmptyValues: true,
+        ignoreStub: true,
       }),
     ],
   };
