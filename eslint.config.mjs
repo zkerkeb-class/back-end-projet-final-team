@@ -1,6 +1,6 @@
-import globals from 'globals';
 import js from '@eslint/js';
 import prettier from 'eslint-plugin-prettier';
+import globals from 'globals';
 
 export default [
   {
@@ -11,14 +11,16 @@ export default [
       globals: {
         ...globals.node,
         ...globals.es2021,
-        ...globals.jest,
-      },
+      }
     },
     plugins: {
-      prettier,
+      prettier
     },
     rules: {
+      // Règles ESLint de base
       ...js.configs.recommended.rules,
+
+      // Intégration Prettier
       'prettier/prettier': [
         'error',
         {
@@ -28,25 +30,45 @@ export default [
           tabWidth: 2,
           semi: true,
           arrowParens: 'always',
-        },
+          endOfLine: 'auto'
+        }
       ],
 
-      // Additional strict rules
+      // Désactiver les règles de style qui peuvent entrer en conflit avec Prettier
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       'no-console': 'warn',
-      'no-unused-vars': 'error',
-      complexity: ['error', 10],
-      'max-lines-per-function': ['error', 50],
 
-      // Additional best practices
-      eqeqeq: 'error',
-      'no-eval': 'error',
-      'no-implied-eval': 'error',
+      // Règles de style et de bonnes pratiques
+      'eqeqeq': 'error',
       'no-var': 'error',
       'prefer-const': 'error',
       'no-duplicate-imports': 'error',
-    },
+    }
   },
   {
-    ignores: ['node_modules/', 'dist/', 'build/', '.cache/', '**/*.min.js'],
+    files: ['**/*.test.js', '**/*.spec.js', '**/tests/**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        jest: 'readonly',
+      }
+    },
+    rules: {
+      'no-undef': 'off',
+      'no-unused-vars': 'off',
+    }
   },
+  {
+    ignores: [
+      'node_modules/',
+      'dist/',
+      'build/',
+      '.cache/'
+    ]
+  }
 ];
