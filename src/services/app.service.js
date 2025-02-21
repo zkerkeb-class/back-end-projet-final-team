@@ -128,7 +128,7 @@ app.use((err, req, res, _next) => {
 });
 
 app.get('/api/health', (_req, res) => {
-  res.status(200).json({ status: 'ok' });
+  res.status(200).json({ status: 'ok coucou Zak' });
 });
 
 app.use(
