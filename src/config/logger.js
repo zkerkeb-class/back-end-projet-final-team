@@ -52,7 +52,7 @@ const configureLogger = (env) => {
     transports: [
       new winston.transports.Console({
         format: logFormat.console,
-        level: env === 'production' ? 'warn' : 'debug',
+        level: 'debug',
       }),
 
       ...(env !== 'test'
@@ -91,9 +91,6 @@ const morganFormats = {
 const createMorganMiddleware = (env = 'development') => {
   return morgan(morganFormats[env] || 'dev', {
     stream: morganStream,
-    skip: (req, res) => {
-      return env === 'production' && res.statusCode < 400;
-    },
   });
 };
 
